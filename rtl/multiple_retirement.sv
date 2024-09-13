@@ -51,9 +51,30 @@ module multiple_retire #(
     output logic [mure_pkg::XLEN-1:0]       epc_o
 );
 
+logic [mure_pkg::CAUSE_LEN-1:0] cause;
+logic [mure_pkg::XLEN-1:0]      tval;
 
-// TODO: make a switch to select the correct cause according to priv_lvl
-// TODO: do the same for the TVAL
+// combinatorial network to assign cause and tval according to the priv_lvl
+    always_comb begin
+        case(priv_lvl_i)
+        2'b11: begin
+            cause = mcause_i;
+            tval = mtval_i;
+        end
+        2'b10: begin
+            cause = vscause_i;
+            tval = vstval_i;
+        end
+        2'b01: begin
+            cause = scause_i;
+            tval = stval_i;
+        end
+        2'b00: begin
+            cause = ucause_i;
+            tval = utval_i;
+        end
+        endcase
+    end
 
 /* MANAGING PC, CC, NC SIGNALS */
 /*
@@ -106,8 +127,8 @@ assign valids0_d = valids_i;
 assign uops0_d = uops_i;
 assign exception0_d = exception_i;
 assign eret0_d = eret_i;
-assign cause0_d = ;
-assign tval0_d = ;
+assign cause0_d = cause;
+assign tval0_d = tval;
 assign pc0_d = pc_i;
 
 /* between FFs assigments */
