@@ -100,6 +100,82 @@ logic [mure_pkg::XLEN-1:0]          pc0_d, pc0_q;
 logic [mure_pkg::XLEN-1:0]          pc1_d, pc1_q;
 logic [mure_pkg::XLEN-1:0]          pc2_d, pc2_q;
 
+/* ASSIGNMENT */
+/* FFs inputs */
+assign valids0_d = valids_i;
+assign uops0_d = uops_i;
+assign exception0_d = exception_i;
+assign eret0_d = eret_i;
+assign cause0_d = ;
+assign tval0_d = ;
+assign pc0_d = pc_i;
+
+/* between FFs assigments */
+assign valids1_d = valids0_q;
+assign valids2_d = valids1_q;
+assign uops1_d = uops0_q;
+assign uops2_d = uops1_q;
+assign exception1_d = exception0_q;
+assign exception2_d = exception1_q;
+assign eret1_d = eret0_q;
+assign eret2_d = eret1_q;
+assign cause1_d = cause0_q;
+assign cause2_d = cause1_q;
+assign tval1_d = tval0_q;
+assign tval2_d = tval1_q;
+assign pc1_d = pc0_q;
+assign pc2_d = pc1_q;
+
+
+/* REGISTERS MANAGEMENT */
+always_ff @( posedge clk_i, negedge rst_ni ) begin
+    if(~rst_ni) begin
+        valids0_q <= '0;
+        valids1_q <= '0;
+        valids2_q <= '0;
+        uops0_q <= '0;
+        uops1_q <= '0;
+        uops2_q <= '0;
+        exception0_q <= '0;
+        exception1_q <= '0;
+        exception2_q <= '0;
+        eret0_q <= '0;
+        eret1_q <= '0;
+        eret2_q <= '0;
+        cause0_q <= '0;
+        cause1_q <= '0;
+        cause2_q <= '0;
+        tval0_q <= '0;
+        tval1_q <= '0;
+        tval2_q <= '0;
+        pc0_q <= '0;
+        pc1_q <= '0;
+        pc2_q <= '0;
+    end else begin
+        valids0_q <= valids0_d;
+        valids1_q <= valids1_d;
+        valids2_q <= valids2_d;
+        uops0_q <= uops0_d;
+        uops1_q <= uops1_d;
+        uops2_q <= uops2_d;
+        exception0_q <= exception0_d;
+        exception1_q <= exception1_d;
+        exception2_q <= exception2_d;
+        eret0_q <= eret0_d;
+        eret1_q <= eret1_d;
+        eret2_q <= eret2_d;
+        cause0_q <= cause0_d;
+        cause1_q <= cause1_d;
+        cause2_q <= cause2_d;
+        tval0_q <= tval0_d;
+        tval1_q <= tval1_d;
+        tval2_q <= tval2_d;
+        pc0_q <= pc0_d;
+        pc1_q <= pc1_d;
+        pc2_q <= pc2_d;
+    end
+end
+
 
 
 
