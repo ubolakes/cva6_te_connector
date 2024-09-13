@@ -5,7 +5,7 @@
 /* TOP LEVEL MODULE */
 
 module multiple_retire #(
-    parameter int unsigned retired_instr = 2 // placeholder value
+    parameter int unsigned NrRetiredInstr = 2 // placeholder value
 )
 (
     input logic clk_i,
@@ -146,6 +146,46 @@ assign tval1_d = tval0_q;
 assign tval2_d = tval1_q;
 assign pc1_d = pc0_q;
 assign pc2_d = pc1_q;
+
+/* FIFOs */
+// TODO: check if it's correct
+/* uops FIFOs */
+for (genvar i = 0; i < NrRetiredInstr; i++) begin
+    fifo_v3 #(
+        .DEPTH(16),
+        .dtype(mure_pkg::uop_entry_s)
+    ) ingressFIFO_cmn (
+        .clk_i  (clk_i),
+        .rst_ni (rst_ni),
+        .flush_i('0),
+        .testmode_i('0),
+        .full_o(),
+        .empty_o(),
+        .usage_o(),
+        .data_i(),
+        .push_i(),
+        .data_o(),
+        .pop_i()
+    );
+end
+
+/* common FIFO */
+fifo_v3 #(
+    .DEPTH(16),
+    .dtype(mure_pkg::common_entry_s)
+) ingressFIFO_cmn (
+    .clk_i  (clk_i),
+    .rst_ni (rst_ni),
+    .flush_i(),
+    .testmode_i(),
+    .full_o(),
+    .empty_o(),
+    .usage_o(),
+    .data_i(),
+    .push_i(),
+    .data_o(),
+    .pop_i()
+);
 
 
 /* REGISTERS MANAGEMENT */
