@@ -26,6 +26,7 @@ module multiple_retire #(
     input logic [retired_instr-1:0]         valids_i,
     input logic [retired_instr*mure_pkg::XLEN:0]      uops_i, // instructions opcodes
     input logic                             exception_i,
+    input logic                             interrupt_i,
     input logic                             eret_i,
     input logic [mure_pkg::CAUSE_LEN-1:0]   ucause_i, // user cause
     input logic [mure_pkg::CAUSE_LEN-1:0]   scause_i, // supervisor cause
@@ -108,6 +109,9 @@ logic [retired_instr*mure_pkg::XLEN:0]  uops2_d, uops2_q;
 logic                               exception0_d, exception0_q;
 logic                               exception1_d, exception1_q;
 logic                               exception2_d, exception2_q;
+logic                               interrupt0_d, interrupt0_q;
+logic                               interrupt1_d, interrupt1_q;
+logic                               interrupt2_d, interrupt2_q;
 logic                               eret0_d, eret0_q;
 logic                               eret1_d, eret1_q;
 logic                               eret2_d, eret2_q;
@@ -126,6 +130,7 @@ logic [mure_pkg::XLEN-1:0]          pc2_d, pc2_q;
 assign valids0_d = valids_i;
 assign uops0_d = uops_i;
 assign exception0_d = exception_i;
+assign interrupt0_d = interrupt_i;
 assign eret0_d = eret_i;
 assign cause0_d = cause;
 assign tval0_d = tval;
@@ -138,6 +143,8 @@ assign uops1_d = uops0_q;
 assign uops2_d = uops1_q;
 assign exception1_d = exception0_q;
 assign exception2_d = exception1_q;
+assign interrupt1_d = interrupt0_q;
+assign interrupt2_d = interrupt1_q;
 assign eret1_d = eret0_q;
 assign eret2_d = eret1_q;
 assign cause1_d = cause0_q;
@@ -200,6 +207,9 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
         exception0_q <= '0;
         exception1_q <= '0;
         exception2_q <= '0;
+        interrupt0_q <= '0;
+        interrupt1_q <= '0;
+        interrupt2_q <= '0;
         eret0_q <= '0;
         eret1_q <= '0;
         eret2_q <= '0;
@@ -222,6 +232,9 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
         exception0_q <= exception0_d;
         exception1_q <= exception1_d;
         exception2_q <= exception2_d;
+        interrupt0_q <= interrupt0_d;
+        interrupt1_q <= interrupt1_d;
+        interrupt2_q <= interrupt2_d;
         eret0_q <= eret0_d;
         eret1_q <= eret1_d;
         eret2_q <= eret2_d;
