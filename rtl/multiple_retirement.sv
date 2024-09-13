@@ -84,7 +84,7 @@ To manage pc, cc, nc signals I decided to use two
 serially connected FFs.
         ___________                    ___________              
 sig0_d--| D     Q |--sig0_q == sig1_d--| D     Q |--sig1_q
-    nc    |         |    cc              |         |    pc
+    nc  |         |    cc              |         |    pc
         |   FF0   |                    |   FF1   |
         |_________|                    |_________|
 
