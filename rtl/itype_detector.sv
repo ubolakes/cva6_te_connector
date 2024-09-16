@@ -7,7 +7,7 @@
 it produces the type of the instruction and gives other infos about it
 */
 
-module trdb_itype_detector
+module itype_detector
 (
     input logic                         clk_i,
     input logic                         rst_ni,
