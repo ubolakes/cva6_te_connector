@@ -82,33 +82,33 @@ module trdb_itype_detector
     // assigning the itype
     always_comb begin
         // initialization
-        itype_o = STD;
+        itype_o = mure_pkg::STD;
 
         // exception
         if (cc_exception_i) begin
-            itype_o = EXC;
+            itype_o = mure_pkg::EXC;
         end
         // interrupt
         if (cc_interrupt_i) begin
-            itype_o = INT;
+            itype_o = mure_pkg::INT;
         end
         // exception or interrupt return
         if (cc_eret_i) begin
-            itype_o = ERET;
+            itype_o = mure_pkg::ERET;
         end
         // nontaken branch
         if (cc_branch && ~cc_branch_taken) begin
-            itype_o = NTB;
+            itype_o = mure_pkg::NTB;
         end
         // taken branch
         if (cc_branch && cc_branch_taken) begin
-            itype_o = TB;
+            itype_o = mure_pkg::TB;
         end
         // uninferable jump
         if (mure_pkg::ITYPE_LEN == 3 && cc_updiscon) begin
-            itype_o = UJ;
+            itype_o = mure_pkg::UJ;
         end else if (mure_pkg::ITYPE_LEN > 3) begin // reserved
-            itype_o = RES;
+            itype_o = mure_pkg::RES;
         end
         // other case for ITYPE_LEN == 4
         /*
