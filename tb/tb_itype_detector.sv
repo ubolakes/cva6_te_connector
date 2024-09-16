@@ -4,9 +4,9 @@
 
 `timescale 1ns/1ns
 
-import trdb_pkg::*;
+import mure_pkg::*;
 
-module tb_trdb_itype_detector();
+module tb_itype_detector();
 
     logic clk;
     logic reset;
@@ -51,7 +51,7 @@ module tb_trdb_itype_detector();
         .itype_o          (itype_o)
     );
 
-    logic [XX:0] test_vector[1000:0];
+    logic [137:0] test_vector[1000:0];
     //    length of line   # of lines
 
     initial begin // reading test vector
