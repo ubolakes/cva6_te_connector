@@ -53,10 +53,7 @@ always_comb begin
 
     case (current_state)
     WAIT_A: begin
-        if (uop_a_i.itype == EXC || uop_b_i.itype == EXC || uop_c_i.itype == EXC ||
-            uop_d_i.itype == EXC || uop_a_i.itype == INT || uop_b_i.itype == INT ||
-            uop_c_i.itype == INT || uop_d_i.itype == INT || uop_a_i.itype == ERET ||
-            uop_b_i.itype == ERET || uop_c_i.itype == ERET || uop_d_i.itype == ERET) begin
+        if (uop_a_i.itype == EXC || uop_a_i.itype == INT || uop_a_i.itype == ERET) begin
                 if (instLast_o == '0) begin
                     // puts A
                     // goto WAIT_A
