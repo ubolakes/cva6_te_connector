@@ -93,7 +93,7 @@ always_comb begin
             // goto WAIT_A
             end else if (ivalids_i[NrRetiredInstr-1] == 1 && ivalids_i[NrRetiredInstr-2] == 1 &&
                          ivalids_i[NrRetiredInstr-3] == 1 && 
-                         (uop_a_i.itype == UJ || uop_b_i.itype != STD)) begin
+                         (uop_a_i.itype == UIJ || uop_b_i.itype != STD)) begin
                             // puts B
                             // goto WAIT_C
                          end else if (  ivalids_i[NrRetiredInstr-1] == 1 && 
@@ -122,7 +122,7 @@ always_comb begin
                 // goto WAIT_A
             end else if (   ivalids_i[NrRetiredInstr-2] == 1 && ivalids_i[NrRetiredInstr-3] == 1 &&
                             ivalids_i[NrRetiredInstr-4] == 1 && 
-                            (uop_b_i.itype == UJ || uop_c_i.itype != STD)) begin
+                            (uop_b_i.itype == UIJ || uop_c_i.itype != STD)) begin
                                 // puts C
                                 // goto WAIT_D
                             end else begin

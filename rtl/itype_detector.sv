@@ -106,7 +106,7 @@ module itype_detector
         end
         // uninferable jump
         if (mure_pkg::ITYPE_LEN == 3 && cc_updiscon) begin
-            itype_o = mure_pkg::UJ;
+            itype_o = mure_pkg::UIJ;
         end else if (mure_pkg::ITYPE_LEN > 3) begin // reserved
             itype_o = mure_pkg::RES;
         end
@@ -122,7 +122,7 @@ module itype_detector
         end
         // uninferable jump
         if () begin
-            itype = UJ;
+            itype = UIJ;
         end
         // inferable jump
         if () begin
@@ -138,7 +138,7 @@ module itype_detector
         end
         // other uninferable jump
         if () begin
-            itype_o = OUJ;
+            itype_o = OUIJ;
         end
         // other inferable jump
         if () begin
