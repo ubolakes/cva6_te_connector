@@ -25,7 +25,7 @@ module trdb_itype_detector
     input logic                         cc_eret_i,
     //input logic                         implicit_return_i, // non mandatory
     
-    output itype_e                      itype_o
+    output mure_pkg::itype_e            itype_o
 );
     /*  EXPLANATION:
         This module considers the lc, tc, nc signals and determines
