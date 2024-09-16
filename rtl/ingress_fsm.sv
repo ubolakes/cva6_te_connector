@@ -16,7 +16,8 @@ module ingress_fsm (
     input mure_pkg::uop_entry_s         uop_d_i,
 
     output logic                        valid_o,
-    output mure_pkg::uop_entry_s        instLast_o
+    output mure_pkg::uop_entry_s        instLast_o,
+    output logic                        pop_o
 
 );
 
@@ -32,6 +33,7 @@ assign all_types_0 =    uop_a_i.itype == STD &&
                         uop_d_i.itype == STD;
 assign multiple_ret = $countones(ivalids_i) > 1 && all_types_0;
 assign instLast_o = instLast_q;
+assign pop_o = next_state == WAIT_A;
 
 // states definition
 typedef enum logic [2:0] { 
