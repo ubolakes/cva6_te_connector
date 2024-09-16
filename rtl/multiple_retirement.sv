@@ -161,7 +161,7 @@ for (genvar i = 0; i < NrRetiredInstr; i++) begin
     fifo_v3 #(
         .DEPTH(16),
         .dtype(mure_pkg::uop_entry_s)
-    ) ingressFIFO_cmn (
+    ) ingressFIFO_uop (
         .clk_i  (clk_i),
         .rst_ni (rst_ni),
         .flush_i('0),
