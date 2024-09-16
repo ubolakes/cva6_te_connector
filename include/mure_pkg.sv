@@ -14,23 +14,6 @@ package mure_pkg;
     localparam XLEN = 32;
 `endif
 
-// struct to store data inside the common FIFO
-typedef struct packed {
-    logic [mure_pkg::CAUSE_LEN-1:0] cause;
-    logic [mure_pkg::XLEN-1:0]      tval;
-    logic [mure_pkg::PRIV_LEN-1:0]  priv;
-    //logic [] context; // non mandatory
-    //logic [] ctype;   // non mandatory
-} common_entry_s;
-
-// struct to store data inside the uop FIFO
-typedef struct packed {
-    itype_e                             itype;
-    logic [mure_pkg::INST_LEN-1:0]      iaddr;
-    logic                               iretire;
-    logic [mure_pkg::ILASTSIZE_LEN-1:0] ilastsize;
-} uop_entry_s;
-
 // struct to save all itypes
 // refer to page 21 of the spec
 typedef enum logic[ITYPE_LEN-1:0] {
@@ -51,6 +34,23 @@ typedef enum logic[ITYPE_LEN-1:0] {
     OUJ = 14, // other uninferable jump
     OIJ = 15 // other inferable jump
 } itype_e;
+
+// struct to store data inside the common FIFO
+typedef struct packed {
+    logic [mure_pkg::CAUSE_LEN-1:0] cause;
+    logic [mure_pkg::XLEN-1:0]      tval;
+    logic [mure_pkg::PRIV_LEN-1:0]  priv;
+    //logic [] context; // non mandatory
+    //logic [] ctype;   // non mandatory
+} common_entry_s;
+
+// struct to store data inside the uop FIFO
+typedef struct packed {
+    itype_e                             itype;
+    logic [mure_pkg::INST_LEN-1:0]      iaddr;
+    logic                               iretire;
+    logic [mure_pkg::ILASTSIZE_LEN-1:0] ilastsize;
+} uop_entry_s;
 
 /* mask and match parameter for itype determination */
 parameter MASK_BEQ = 32'h707f;
