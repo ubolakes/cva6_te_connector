@@ -37,7 +37,7 @@ module multiple_retire #(
     input logic [mure_pkg::XLEN-1:0]        vstval_i, // virtual supervisor tval
     input logic [mure_pkg::XLEN-1:0]        mtval_i, // machine tval
     input logic [mure_pkg::PRIV_LEN-1:0]    priv_lvl_i, // priv_lvl_q
-    input logic [mure_pkg::XLEN-1:0]        pc_i,
+    input logic [NrRetiredInstr*mure_pkg::XLEN-1:0]        pc_i,
     //input logic /*[]*/                      ptbr_i,
 
     // outputs
@@ -48,7 +48,7 @@ module multiple_retire #(
     output logic                            interrupt_o, // used to discriminate interrupt
     output logic [mure_pkg::INST_LEN-1:0]   inst_data_o,
     //output logic                            compressed_o, // to discriminate compressed instrs
-    output logic [mure_pkg::XLEN-1:0]       pc_o, // instruction address
+    output logic [NrRetiredInstr*mure_pkg::XLEN-1:0]    pc_o, // instruction address
     output logic [mure_pkg::XLEN-1:0]       epc_o
 );
 
@@ -121,9 +121,9 @@ logic [mure_pkg::CAUSE_LEN-1:0]     cause2_d, cause2_q;
 logic [mure_pkg::XLEN-1:0]          tval0_d, tval0_q;
 logic [mure_pkg::XLEN-1:0]          tval1_d, tval1_q;
 logic [mure_pkg::XLEN-1:0]          tval2_d, tval2_q;
-logic [mure_pkg::XLEN-1:0]          pc0_d, pc0_q;
-logic [mure_pkg::XLEN-1:0]          pc1_d, pc1_q;
-logic [mure_pkg::XLEN-1:0]          pc2_d, pc2_q;
+logic [NrRetiredInstr*mure_pkg::XLEN-1:0]   pc0_d, pc0_q;
+logic [NrRetiredInstr*mure_pkg::XLEN-1:0]   pc1_d, pc1_q;
+logic [NrRetiredInstr*mure_pkg::XLEN-1:0]   pc2_d, pc2_q;
 
 /* other signals */
 logic [NrRetiredInstr*mure_pkg::ITYPE_LEN-1:0]    itypes;
