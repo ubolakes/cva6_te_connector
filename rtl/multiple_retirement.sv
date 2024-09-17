@@ -23,8 +23,8 @@ module multiple_retire #(
     - predicted instruction (?)
     */
     // inputs
-    input logic [retired_instr-1:0]         valids_i,
-    input logic [retired_instr*mure_pkg::XLEN:0]      uops_i, // instructions opcodes
+    input logic [NrRetiredInstr-1:0]         valids_i,
+    input logic [NrRetiredInstr*mure_pkg::XLEN-1:0]      uops_i, // instructions opcodes
     input logic                             exception_i,
     input logic                             interrupt_i,
     input logic                             eret_i,
@@ -100,12 +100,12 @@ Nonetheless all inputs must be sampled and the output of the FF is considered nc
 */
 
 /* signals for FFs */
-logic [retired_instr-1:0]           valids0_d, valids0_q;
-logic [retired_instr-1:0]           valids1_d, valids1_q;
-logic [retired_instr-1:0]           valids2_d, valids2_q;
-logic [retired_instr*mure_pkg::XLEN:0]  uops0_d, uops0_q;
-logic [retired_instr*mure_pkg::XLEN:0]  uops1_d, uops1_q;
-logic [retired_instr*mure_pkg::XLEN:0]  uops2_d, uops2_q;
+logic [NrRetiredInstr-1:0]           valids0_d, valids0_q;
+logic [NrRetiredInstr-1:0]           valids1_d, valids1_q;
+logic [NrRetiredInstr-1:0]           valids2_d, valids2_q;
+logic [NrRetiredInstr*mure_pkg::XLEN-1:0] uops0_d, uops0_q;
+logic [NrRetiredInstr*mure_pkg::XLEN-1:0] uops1_d, uops1_q;
+logic [NrRetiredInstr*mure_pkg::XLEN-1:0] uops2_d, uops2_q;
 logic                               exception0_d, exception0_q;
 logic                               exception1_d, exception1_q;
 logic                               exception2_d, exception2_q;
@@ -124,6 +124,9 @@ logic [mure_pkg::XLEN-1:0]          tval2_d, tval2_q;
 logic [mure_pkg::XLEN-1:0]          pc0_d, pc0_q;
 logic [mure_pkg::XLEN-1:0]          pc1_d, pc1_q;
 logic [mure_pkg::XLEN-1:0]          pc2_d, pc2_q;
+
+/* other signals */
+logic [NrRetiredInstr*mure_pkg::ITYPE_LEN-1:0]    itypes;
 
 /* ASSIGNMENT */
 /* FFs inputs */
@@ -153,6 +156,30 @@ assign tval1_d = tval0_q;
 assign tval2_d = tval1_q;
 assign pc1_d = pc0_q;
 assign pc2_d = pc1_q;
+
+
+// access to chunk in vector:
+// [(NrRetiredInstr-i)*CHUNK_LEN-1 : (NrRetiredInstr-i-1)*CHUNK_LEN]
+
+/* itype_detectors */
+for (genvar i = 0; i < NrRetiredInstr; i++) begin
+    itype_detector i_itype_detector (
+        .clk_i          (clk_i),
+        .rst_ni         (rst_ni),
+        .pc_valid_i     (valids2_q[NrRetiredInstr-i]),
+        .cc_valid_i     (valids1_q[NrRetiredInstr-i]),
+        .nc_valid_i     (valids0_q[NrRetiredInstr-i]),
+        .pc_iaddr_i     (pc2_q[(NrRetiredInstr-i)*mure_pkg::XLEN-1 : (NrRetiredInstr-i-1)*mure_pkg::XLEN]),
+        .cc_iaddr_i     (pc1_q[(NrRetiredInstr-i)*mure_pkg::XLEN-1 : (NrRetiredInstr-i-1)*mure_pkg::XLEN]),
+        .nc_iaddr_i     (pc0_q[(NrRetiredInstr-i)*mure_pkg::XLEN-1 : (NrRetiredInstr-i-1)*mure_pkg::XLEN]),
+        .cc_inst_data_i (uops1_q[(NrRetiredInstr-i)*mure_pkg::INST_LEN-1 : (NrRetiredInstr-i-1)*mure_pkg::INST_LEN]),
+        .cc_compressed_i('0),
+        .cc_exception_i (exception1_q),
+        .cc_interrupt_i (interrupt1_q),
+        .cc_eret_i      (eret1_q),
+        .itype_o        (itypes[(NrRetiredInstr-i)*mure_pkg::ITYPE_LEN-1 : (NrRetiredInstr-i-1)*mure_pkg::ITYPE_LEN])
+    );
+end
 
 /* FIFOs */
 // TODO: check if it's correct
