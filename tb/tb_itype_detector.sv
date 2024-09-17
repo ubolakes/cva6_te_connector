@@ -78,7 +78,7 @@ module tb_itype_detector();
     end
 
     always @(negedge clk) begin// on negedge we compare the expected result with the actual one
-        // nc_branch_o
+        // itype_o
         if(expected_itype !== itype_o) begin
             $display("Wrong itype: %b!=%b", expected_itype, itype_o); // printed if it's wrong
         end        
