@@ -3,6 +3,10 @@
 // Github:  @ubolakes
 
 /* FSM */
+/*
+it determines which instruction is the one to send to the trace encoder
+*/
+
 
 module ingress_fsm (
     input logic                         clk_i,
