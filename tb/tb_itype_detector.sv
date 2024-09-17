@@ -35,20 +35,20 @@ module tb_itype_detector();
 
     // DUT instantiation
     itype_detector DUT(
-        .clk_i            (clk),
-        .rst_ni           (reset),
-        .pc_valid_i       (pc_valid_i),
-        .cc_valid_i       (cc_valid_i),
-        .nc_valid_i       (nc_valid_i),
-        .pc_iaddr_i       (pc_iaddr_i),
-        .cc_iaddr_i       (cc_iaddr_i),
-        .nc_iaddr_i       (nc_iaddr_i),
-        .cc_inst_data_i   (cc_inst_data_i),
-        .cc_compressed_i  (cc_compressed_i),
-        .cc_exception_i   (cc_exception_i),
-        .cc_interrupt_i   (cc_interrupt_i),
-        .cc_eret_i        (cc_eret_i),
-        .itype_o          (itype_o)
+        .clk_i          (clk),
+        .rst_ni         (reset),
+        .pc_valid_i     (pc_valid_i),
+        .cc_valid_i     (cc_valid_i),
+        .nc_valid_i     (nc_valid_i),
+        .pc_iaddr_i     (pc_iaddr_i),
+        .cc_iaddr_i     (cc_iaddr_i),
+        .nc_iaddr_i     (nc_iaddr_i),
+        .cc_inst_data_i (cc_inst_data_i),
+        .cc_compressed_i(cc_compressed_i),
+        .cc_exception_i (cc_exception_i),
+        .cc_interrupt_i (cc_interrupt_i),
+        .cc_eret_i      (cc_eret_i),
+        .itype_o        (itype_o)
     );
 
     logic [137:0] test_vector[1000:0];
