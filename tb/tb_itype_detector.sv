@@ -62,18 +62,19 @@ module tb_itype_detector();
     end
 
     always @(posedge clk) begin // on posedge we get expected output
-        {pc_valid_i,
-        cc_valid_i,
-        nc_valid_i,
-        pc_iaddr_i,
-        cc_iaddr_i,
-        nc_iaddr_i,
-        cc_inst_data_i,
-        cc_compressed_i,
-        cc_exception_i,
-        cc_interrupt_i,
-        cc_eret_i,
-        expected_itype
+        {
+            pc_valid_i,
+            cc_valid_i,
+            nc_valid_i,
+            pc_iaddr_i,
+            cc_iaddr_i,
+            nc_iaddr_i,
+            cc_inst_data_i,
+            cc_compressed_i,
+            cc_exception_i,
+            cc_interrupt_i,
+            cc_eret_i,
+            expected_itype
         } = test_vector[i]; #10; 
     end
 
@@ -91,8 +92,5 @@ module tb_itype_detector();
         clk <= 1; #5;
         clk <= 0; #5;
     end
-
-
-
 
 endmodule
