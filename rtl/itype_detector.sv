@@ -4,7 +4,7 @@
 
 /* ITYPE DETECTOR */
 /*
-it produces the type of the instruction and gives other infos about it
+it produces the type of the instruction
 */
 
 module itype_detector
