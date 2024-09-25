@@ -42,6 +42,8 @@ typedef struct packed {
     logic [mure_pkg::PRIV_LEN-1:0]  priv;
     //logic [] context; // non mandatory
     //logic [] ctype;   // non mandatory
+    //logic [] time; // non mandatory
+    //logic [] sijump; // non mandatory
 } common_entry_s;
 
 // struct to store data inside the uop FIFO
