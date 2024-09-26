@@ -41,20 +41,25 @@ module multiple_retire #(
 );
 
 // entries for the FIFOs
-uop_entry_s     uop_entry_i[NrRetiredInstr], uop_entry_o;
-common_entry_s  common_entry_i, common_entry_o;
+uop_entry_s                         uop_entry_i[NrRetiredInstr], uop_entry_o;
+common_entry_s                      common_entry_i, common_entry_o;
 // FIFOs management
-logic           pop; // signal to pop FIFOs
-logic           empty[NrRetiredInstr]; // signal used to enable counter
-logic           full[NrRetiredInstr];
-logic           push_enable;
+logic                               pop; // signal to pop FIFOs
+logic                               empty[NrRetiredInstr]; // signal used to enable counter
+logic                               full[NrRetiredInstr];
+logic                               push_enable;
+// counter management
+logic [$clog2(NrRetiredInstr)-1:0]  cnt_val;
+logic                               clear_counter;
+logic                               enable_counter;
 
 
 // assignments
 assign pop = cnt_val == NrRetiredInstr-1;
 assign push_enable = ;//TODO: FIFOs not full
+assign clear_counter = cnt_val == NrRetiredInstr-1;
+assign enable_counter = !empty[0]; // the counter goes on if FIFOs are not empty
 
-// modules instantiation
 /* FIFOs */
 /* commit ports FIFOs */
 for (genvar i = 0; i < NrRetiredInstr; i++) begin
@@ -96,6 +101,21 @@ fifo_v3 #(
 
 // TODOs:
 // counter instantation - from common_cells
+counter #(
+    .WIDTH($clog2(NrRetiredInstr)),
+    .STICKY_OVERFLOW('0)
+) i_mux_arbiter ( // change name?
+    .clk_i     (clk_i),
+    .rst_ni    (rst_ni),
+    .clear_i   (clear_counter),
+    .en_i      (enable_counter),
+    .load_i    ('0),
+    .down_i    ('0),
+    .d_i       ('0),
+    .q_o       (cnt_val),
+    .overflow_o()
+);
+
 // combinatorial logic to manage the MUX
 
 /* REGISTERS MANAGEMENT */
