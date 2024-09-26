@@ -42,7 +42,7 @@ module tb_multiple_retirement();
     logic [31:0] i;
 
     // DUT instantiation
-    multiple_retire DUT(
+    multiple_retirement DUT(
         .clk_i      (clk),
         .rst_ni     (reset),
         .iretire_i  (iretire_i),
@@ -61,7 +61,7 @@ module tb_multiple_retirement();
         .iaddr_o    (iaddr_o)
     );
 
-    logic [XX:0] test_vector[1000:0];
+    logic [188:0] test_vector[1000:0];
     //    length of line   # of lines
 
     initial begin // reading test vector
