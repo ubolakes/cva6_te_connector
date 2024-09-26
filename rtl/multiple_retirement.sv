@@ -17,7 +17,7 @@ module multiple_retire #(
     input logic [NrRetiredInstr-1:0]/*[?:?]*/                   ilastsize_i, // TODO: define correct size
     input logic [NrRetiredInstr-1:0][mure_pkg::ITYPE_LEN-1:0]   itype_i,
     input logic [mure_pkg::CAUSE_LEN-1:0]                       cause_i,
-    input logic [mure_pkg::TVAL_LEN-1:0]                        tval_i,
+    input logic [mure_pkg::XLEN-1:0]                        tval_i,
     input logic [mure_pkg::PRIV_LEN-1:0]                        priv_i,
     input logic [NrRetiredInstr-1:0][mure_pkg::XLEN-1:0]        iaddr_i,
     //input logic [mure_pkg::CTX_LEN-1:0]                         context_i, // non mandatory
@@ -31,7 +31,7 @@ module multiple_retire #(
     output logic                                                ilastsize_o, // TODO: define correct size
     output logic [mure_pkg::ITYPE_LEN-1:0]                      itype_o,
     output logic [mure_pkg::CAUSE_LEN-1:0]                      cause_o,
-    output logic [mure_pkg::TVAL_LEN-1:0]                       tval_o,
+    output logic [mure_pkg::XLEN-1:0]                       tval_o,
     output logic [mure_pkg::PRIV_LEN-1:0]                       priv_o,
     output logic [mure_pkg::XLEN-1:0]                           iaddr_o
     //output logic [mure_pkg::CTX_LEN-1:0]                        context_o, // non mandatory
