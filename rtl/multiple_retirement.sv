@@ -4,7 +4,7 @@
 
 /* TOP LEVEL MODULE */
 
-module multiple_retire #(
+module multiple_retirement #(
     parameter int unsigned NrRetiredInstr = 2; // placeholder value, CVA6
 )
 (
