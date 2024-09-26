@@ -14,7 +14,7 @@ module multiple_retire #(
     /* data from the CPU */
     // inputs
     input logic [NrRetiredInstr-1:0]/*[?:?]*/                   iretire_i,
-    input logic [NrRetiredInstr-1:0]/*[?:?]*/                   ilastsize_i,
+    input logic [NrRetiredInstr-1:0]/*[?:?]*/                   ilastsize_i, // TODO: define correct size
     input logic [NrRetiredInstr-1:0][mure_pkg::ITYPE_LEN-1:0]   itype_i,
     input logic [mure_pkg::CAUSE_LEN-1:0]                       cause_i,
     input logic [mure_pkg::TVAL_LEN-1:0]                        tval_i,
@@ -28,7 +28,7 @@ module multiple_retire #(
     // outputs
     /* the output of the module goes directly into the trace_encoder module */
     output logic                                                iretire_o,
-    output logic                                                ilastsize_o,
+    output logic                                                ilastsize_o, // TODO: define correct size
     output logic [mure_pkg::ITYPE_LEN-1:0]                      itype_o,
     output logic [mure_pkg::CAUSE_LEN-1:0]                      cause_o,
     output logic [mure_pkg::TVAL_LEN-1:0]                       tval_o,
@@ -41,7 +41,7 @@ module multiple_retire #(
 );
 
 // entries for the FIFOs
-uop_entry_s                         uop_entry_i[NrRetiredInstr], uop_entry_o;
+uop_entry_s                         uop_entry_i[NrRetiredInstr], uop_entry_o[NrRetiredInstr];
 common_entry_s                      common_entry_i, common_entry_o;
 // FIFOs management
 logic                               pop; // signal to pop FIFOs
@@ -74,9 +74,9 @@ for (genvar i = 0; i < NrRetiredInstr; i++) begin
         .full_o(full[i]),
         .empty_o(empty[i]),
         .usage_o(),
-        .data_i(uop_entry[i]),
+        .data_i(uop_entry_i[i]),
         .push_i(),
-        .data_o(),
+        .data_o(uop_entry_o[i]),
         .pop_i(pop)
     );
 end
@@ -93,13 +93,12 @@ fifo_v3 #(
     .full_o(),
     .empty_o(),
     .usage_o(),
-    .data_i(common_entry),
+    .data_i(common_entry_i),
     .push_i(),
-    .data_o(),
+    .data_o(common_entry_o),
     .pop_i()
 );
 
-// TODOs:
 // counter instantation - from common_cells
 counter #(
     .WIDTH($clog2(NrRetiredInstr)),
@@ -116,7 +115,28 @@ counter #(
     .overflow_o()
 );
 
+// does it make sense to put this logic in a module?
 // combinatorial logic to manage the MUX
+always_comb begin : multiplexer
+    // initialization
+    iretire_o = '0;
+    ilastsize_o = '0;
+    itype_o = '0;
+    cause_o = '0;
+    tval_o = '0;
+    priv_o = '0;
+    iaddr_o = '0;
+
+    // determinating output
+    iretire_o = uop_entry_o[cnt_val].iretire;
+    ilastsize_o = uop_entry_o[cnt_val].ilastsize;
+    itype_o = uop_entry_o[cnt_val].itype;
+    iaddr_o = uop_entry_o[cnt_val].iaddr;
+    cause_o = common_entry_o.cause;
+    tval_o = common_entry_o.tval;
+    priv_o = common_entry_o.priv;
+
+end
 
 /* REGISTERS MANAGEMENT */
 always_ff @( posedge clk_i, negedge rst_ni ) begin
