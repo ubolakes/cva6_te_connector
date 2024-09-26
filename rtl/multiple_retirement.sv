@@ -56,7 +56,7 @@ logic                               enable_counter;
 
 // assignments
 assign pop = cnt_val == NrRetiredInstr-1;
-assign push_enable = ;//TODO: FIFOs not full
+assign push_enable = !full[0];// maybe: at least one instr committed?
 assign clear_counter = cnt_val == NrRetiredInstr-1;
 assign enable_counter = !empty[0]; // the counter goes on if FIFOs are not empty
 
