@@ -6,35 +6,37 @@
 
 import mure_pkg::*;
 
+localparam NrRetiredInstr = 2;
+
 module tb_multiple_retirement();
 
     logic clk;
     logic reset;
 
     // inputs
-    logic [NrRetiredInstr-1:0]                  iretire_i;
-    logic [NrRetiredInstr-1:0]                  ilastsize_i;
-    logic [NrRetiredInstr-1:0][ITYPE_LEN-1:0]   itype_i;
-    logic [CAUSE_LEN-1:0]                       cause_i;
-    logic [TVAL_LEN-1:0]                        tval_i;
-    logic [PRIV_LEN-1:0]                        priv_i;
-    logic [NrRetiredInstr-1:0][XLEN-1:0]        iaddr_i;
+    logic [NrRetiredInstr-1:0][0:0]                 iretire_i;
+    logic [NrRetiredInstr-1:0][ILASTSIZE_LEN-1:0]   ilastsize_i;
+    logic [NrRetiredInstr-1:0][ITYPE_LEN-1:0]       itype_i;
+    logic [CAUSE_LEN-1:0]                           cause_i;
+    logic [XLEN-1:0]                                tval_i;
+    logic [PRIV_LEN-1:0]                            priv_i;
+    logic [NrRetiredInstr-1:0][XLEN-1:0]            iaddr_i;
 
     // outputs
-    logic                                       iretire_o;
-    logic                                       ilastsize_o;
+    logic [0:0]                                     iretire_o;
+    logic [ILASTSIZE_LEN-1:0]                   ilastsize_o;
     logic [ITYPE_LEN-1:0]                       itype_o;
     logic [CAUSE_LEN-1:0]                       cause_o;
-    logic [TVAL_LEN-1:0]                        tval_o;
+    logic [XLEN-1:0]                            tval_o;
     logic [PRIV_LEN-1:0]                        priv_o;
     logic [XLEN-1:0]                            iaddr_o;
 
     // testing only outputs
     logic                                       expected_iretire;
-    logic                                       expected_ilastsize;
+    logic [ILASTSIZE_LEN-1:0]                   expected_ilastsize;
     logic [ITYPE_LEN-1:0]                       expected_itype;
     logic [CAUSE_LEN-1:0]                       expected_cause;
-    logic [TVAL_LEN-1:0]                        expected_tval;
+    logic [XLEN-1:0]                            expected_tval;
     logic [PRIV_LEN-1:0]                        expected_priv;
     logic [XLEN-1:0]                            expected_iaddr;
 
@@ -65,9 +67,9 @@ module tb_multiple_retirement();
     //    length of line   # of lines
 
     initial begin // reading test vector
-        $readmemb("tv_multiple_retire", test_vector);
+        $readmemb("tv_multiple_retirement", test_vector);
         i = 0;
-        //reset = 0; #10;
+        reset = 0; #10;
         reset = 1;            
     end
 
