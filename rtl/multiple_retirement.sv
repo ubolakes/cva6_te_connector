@@ -13,8 +13,8 @@ module multiple_retirement #(
 
     /* data from the CPU */
     // inputs
-    input logic [NrRetiredInstr-1:0][0:0]                       iretire_i,
-    input logic [NrRetiredInstr-1:0]                            ilastsize_i, // TODO: define correct size
+    input logic [NrRetiredInstr-1:0][mure_pkg::IRETIRE_LEN-1:0] iretire_i,
+    input logic [NrRetiredInstr-1:0]                            ilastsize_i,
     input logic [NrRetiredInstr-1:0][mure_pkg::ITYPE_LEN-1:0]   itype_i,
     input logic [mure_pkg::CAUSE_LEN-1:0]                       cause_i,
     input logic [mure_pkg::XLEN-1:0]                            tval_i,
@@ -27,8 +27,8 @@ module multiple_retirement #(
 
     // outputs
     /* the output of the module goes directly into the trace_encoder module */
-    output logic [0:0]                                          iretire_o,
-    output logic                                                ilastsize_o, // TODO: define correct size
+    output logic [mure_pkg::IRETIRE_LEN-1:0]                    iretire_o,
+    output logic                                                ilastsize_o,
     output logic [mure_pkg::ITYPE_LEN-1:0]                      itype_o,
     output logic [mure_pkg::CAUSE_LEN-1:0]                      cause_o,
     output logic [mure_pkg::XLEN-1:0]                           tval_o,
