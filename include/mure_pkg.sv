@@ -6,7 +6,6 @@ package mure_pkg;
     localparam CAUSE_LEN = 5;
     localparam PRIV_LEN = 2; // depends on CPU implementation
     localparam INST_LEN = 32;
-    localparam ILASTSIZE_LEN = 1;
     localparam ITYPE_LEN = 3;
 `ifdef TRDB_ARCH64 // 64bit arch specific parameters
     localparam XLEN = 64;
@@ -48,10 +47,10 @@ typedef struct packed {
 
 // struct to store data inside the uop FIFO
 typedef struct packed {
-    logic [mure_pkg::ITYPE_LEN-1:0]     itype;
-    logic [mure_pkg::INST_LEN-1:0]      iaddr;
-    logic                               iretire;
-    logic [mure_pkg::ILASTSIZE_LEN-1:0] ilastsize;
+    logic [mure_pkg::ITYPE_LEN-1:0] itype;
+    logic [mure_pkg::INST_LEN-1:0]  iaddr;
+    logic                           iretire;
+    logic                           ilastsize;
 } uop_entry_s;
 
 /* mask and match parameter for itype determination */
