@@ -7,6 +7,7 @@ package mure_pkg;
     localparam PRIV_LEN = 2; // depends on CPU implementation
     localparam INST_LEN = 32;
     localparam ITYPE_LEN = 3;
+    localparam IRETIRE_LEN = 3; // TODO: define correct length
 `ifdef TRDB_ARCH64 // 64bit arch specific parameters
     localparam XLEN = 64;
 `else // 32bit arch
@@ -36,9 +37,9 @@ typedef enum logic[ITYPE_LEN-1:0] {
 
 // struct to store data inside the common FIFO
 typedef struct packed {
-    logic [mure_pkg::CAUSE_LEN-1:0] cause;
-    logic [mure_pkg::XLEN-1:0]      tval;
-    logic [mure_pkg::PRIV_LEN-1:0]  priv;
+    logic [CAUSE_LEN-1:0]   cause;
+    logic [XLEN-1:0]        tval;
+    logic [PRIV_LEN-1:0]    priv;
     //logic [] context; // non mandatory
     //logic [] ctype;   // non mandatory
     //logic [] time; // non mandatory
@@ -47,10 +48,10 @@ typedef struct packed {
 
 // struct to store data inside the uop FIFO
 typedef struct packed {
-    logic [mure_pkg::ITYPE_LEN-1:0] itype;
-    logic [mure_pkg::INST_LEN-1:0]  iaddr;
-    logic                           iretire;
-    logic                           ilastsize;
+    logic [ITYPE_LEN-1:0]   itype;
+    logic [INST_LEN-1:0]    iaddr;
+    logic [IRETIRE_LEN-1:0] iretire;
+    logic                   ilastsize;
 } uop_entry_s;
 
 /* mask and match parameter for itype determination */
