@@ -36,24 +36,23 @@ typedef enum logic[ITYPE_LEN-1:0] {
     OIJ = 15*/ // other inferable jump
 } itype_e;
 
-// struct to store data inside the common FIFO
-typedef struct packed {
-    logic [CAUSE_LEN-1:0]   cause;
-    logic [XLEN-1:0]        tval;
-    logic [PRIV_LEN-1:0]    priv;
-    //logic [] context; // non mandatory
-    //logic [] ctype;   // non mandatory
-    //logic [] time; // non mandatory
-    //logic [] sijump; // non mandatory
-} common_entry_s;
-
 // struct to store data inside the uop FIFO
 typedef struct packed {
-    logic [ITYPE_LEN-1:0]   itype;
-    logic [INST_LEN-1:0]    iaddr;
-    logic [IRETIRE_LEN-1:0] iretire;
-    logic                   ilastsize;
-} uop_entry_s;
+    logic valid,
+    logic [XLEN-1:0]        pc,
+    logic [INST_LEN-1:0]    inst_data,
+    logic                   compressed,
+    logic                   exception,
+    logic                   interrupt,
+    logic                   eret,
+    logic [CAUSE_LEN-1:0]   cause,
+    logic [XLEN-1:0]        tval,
+    logic [PRIV_LEN-1:0]    priv,
+    //logic []                context; // non mandatory
+    //logic []                ctype;   // non mandatory
+    //logic []                time; // non mandatory
+    //logic []                sijump; // non mandatory
+} fifo_entry_s;
 
 /* mask and match parameter for itype determination */
 parameter MASK_BEQ = 32'h707f;
