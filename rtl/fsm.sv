@@ -23,6 +23,107 @@ module ingress_fsm (
     output logic [mure_pkg::XLEN-1:0]           iaddr_o
 );
 
+/* internal signals */
+mure_pkg::state_e current_state, next_state;
+logic [mure_pkg::XLEN-1:0]      iaddr_d, iaddr_q;
+logic [mure_pkg::XLEN-1:0]      iretire_d, iretire_q;
+logic                           ilastsize_d, ilastsize_q;
+logic [mure_pkg::ITYPE_LEN-1:0] itype_d, itype_q;
+logic                           exception;
+logic                           special_inst;
+logic                           valid_d, valid_q;
+logic                           rst_sync_d, rst_sync_q;
+
+/* assignments */
+assign exception = fifo_entry_i.itype == 1;
+assign special_inst = fifo_entry_i.itype > 1 && fifo_entry_i.valid || exception;
+assign iretire_o = iretire_q;
+assign ilastsize_o = ilastsize_q;
+assign itype_o = itype_q;
+assign cause_o = fifo_entry_i.cause;
+assign tval_o = fifo_entry_i.tval;
+assign priv_o = fifo_entry_i.priv;
+assign iaddr_o = iaddr_q;
+assign valid_o = valid_q;
+assign rst_sync_d = valid_q;
+
+// combinatorial logic for state transition
+always_comb begin
+    // next_state default value
+    next_state = current_state;
+    // init
+    valid_d = '0;
+
+    case (current_state)
+    IDLE: begin
+        if (fifo_entry_i.itype == 0 && fifo_entry_i.valid) begin // standard instr and valid
+            // sets iaddr, increases iretire
+            iaddr_d = fifo_entry_i.pc;
+            iretire_d = fifo_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+            // goes to COUNT
+            next_state = mure_pkg::COUNT;
+        end else if (special_inst) begin // special inst as first inst
+            // set all params for output
+            iaddr_d = fifo_entry_i.pc;
+            iretire_d = fifo_entry_i.compressed ? 1 : 2;
+            ilastsize_d = !fifo_entry_i.compressed;
+            itype_d = fifo_entry_i.itype;
+            // remains here
+            next_state = mure_pkg::IDLE;
+            // output readable
+            valid_d = '1;
+        end
+    end
+
+    COUNT: begin
+        if (fifo_entry_i.itype == 0 && fifo_entry_i.valid) begin // standard inst
+            // increases iretire
+            iretire_d = fifo_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+            // remains here
+            next_state = mure_pkg::COUNT;
+        end else if (special_inst) begin
+            // increases iretire
+            iretire_d = fifo_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+            // sets ilastsize
+            ilastsize_d = !fifo_entry_i.compressed;
+            // sets itype
+            itype_d = fifo_entry_i.itype;
+            // goes to IDLE
+            next_state = mure_pkg::IDLE;
+            // output readable
+            valid_d = '1;
+        end
+    end
+
+    endcase
+end
+
+// sequential logic
+always_ff @(posedge clk_i, negedge rst_ni) begin
+    if (!rst_ni) begin
+        current_state <= IDLE;
+        iaddr_q <= '0;
+        iretire_q <= '0;
+        ilastsize_q <= '0;
+        itype_q <= '0;
+        valid_q <= '0;
+        rst_sync_q <= '0;
+    end else if (rst_sync_q) begin
+        iaddr_q <= '0;
+        iretire_q <= '0;
+        ilastsize_q <= '0;
+        itype_q <= '0;
+    end else begin
+        current_state <= next_state;
+        iaddr_q <= iaddr_d;
+        iretire_q <= iretire_d;
+        ilastsize_q <= ilastsize_d;
+        itype_q <= itype_d;
+        valid_q <= valid_d;
+        rst_sync_q <= rst_sync_d;
+    end
+end
+
 
 endmodule
 
