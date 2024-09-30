@@ -94,6 +94,21 @@ counter #(
     .overflow_o()
 );
 
+// fsm instantiation
+fsm i_fsm(
+    .clk_i       (clk_i),
+    .rst_ni      (rst_ni),
+    .fifo_entry_i(),
+    .valid_o     (valid_o),
+    .iretire_o   (iretire_o),
+    .ilastsize_o (ilastsize_o),
+    .itype_o     (itype_o),
+    .cause_o     (cause_o),
+    .tval_o      (tval_o),
+    .priv_o      (priv_o),
+    .iaddr_o     (iaddr_o)
+);
+
 always_comb begin
     // populating uop FIFO entry
     for (int i = 0; i < mure_pkg::NRET; i++) begin
