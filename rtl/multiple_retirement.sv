@@ -100,6 +100,7 @@ always_comb begin
         fifo_entry_i[i].valid = valid_i;
         fifo_entry_i[i].pc = pc_i;
         fifo_entry_i[i].inst_data = inst_data_i;
+        fifo_entry_i[i].itype = '0; // init, defined in itype_detector
         fifo_entry_i[i].compressed = compressed_i;
         fifo_entry_i[i].exception = exception_i;
         fifo_entry_i[i].interrupt = interrupt_i;

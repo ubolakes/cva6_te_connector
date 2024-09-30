@@ -41,6 +41,7 @@ typedef struct packed {
     logic                   valid,
     logic [XLEN-1:0]        pc,
     logic [INST_LEN-1:0]    inst_data,
+    logic [ITYPE_LEN-1:0]   itype, // determined in itype detector
     logic                   compressed,
     logic                   exception,
     logic                   interrupt,
