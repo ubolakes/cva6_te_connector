@@ -15,9 +15,12 @@ module multiple_retirement
     input logic [mure_pkg::NRET-1:0][mure_pkg::XLEN-1:0]        pc_i,
     input logic [mure_pkg::NRET-1:0][mure_pkg::INST_LEN-1:0]    inst_data_i,
     input logic [mure_pkg::NRET-1:0]                            compressed_i,
-    input logic exception_i,
-    input logic interrupt_i,
-    input logic eret_i,
+    input logic [mure_pkg::CAUSE_LEN-1:0]                       cause_i,
+    input logic [mure_pkg::XLEN-1:0]                            tval_i,
+    input logic [mure_pkg::PRIV_LEN-1:0]                        priv_i,
+    input logic                                                 exception_i,
+    input logic                                                 interrupt_i,
+    input logic                                                 eret_i,
     //input logic [mure_pkg::CTX_LEN-1:0]                         context_i, // non mandatory
     //input logic [mure_pkg::TIME_LEN-1:0]                        time_i, // non mandatory
     //input logic [mure_pkg::CTYPE_LEN-1:0]                       ctype_i, // non mandatory
@@ -41,6 +44,7 @@ module multiple_retirement
 
 // entries for the FIFOs
 mure_pkg::fifo_entry_s              fifo_entry_i[mure_pkg::NRET-1:0], fifo_entry_o[mure_pkg::NRET-1:0];
+mure_pkg::fifo_entry_s              fifo_entry_mux;
 mure_pkg::fifo_entry_s              fifo_entry0_d, fifo_entry0_q;
 mure_pkg::fifo_entry_s              fifo_entry1_d, fifo_entry1_q;
 mure_pkg::fifo_entry_s              fifo_entry2_d, fifo_entry2_q;
@@ -57,10 +61,10 @@ logic                               enable_counter;
 
 // assignments
 assign pop = cnt_val == mure_pkg::NRET-1;
-assign push_enable = |iretire_i && !full[0];
+assign push_enable = (fifo_entry_i[0].valid || fifo_entry_i[1].valid) && !full[0];
 assign clear_counter = cnt_val == mure_pkg::NRET-1;
 assign enable_counter = !empty[0]; // the counter goes on if FIFOs are not empty
-assign fifo_entry0_d = fifo_entry_i;
+assign fifo_entry0_d = fifo_entry_mux;
 assign fifo_entry1_d = fifo_entry0_q;
 assign fifo_entry2_d = fifo_entry1_q;
 
@@ -69,19 +73,19 @@ assign fifo_entry2_d = fifo_entry1_q;
 for (genvar i = 0; i < mure_pkg::NRET; i++) begin
     fifo_v3 #(
         .DEPTH(16),
-        .dtype(mure_pkg::uop_entry_s)
+        .dtype(mure_pkg::fifo_entry_s)
     ) ingressFIFO_uop (
-        .clk_i  (clk_i),
-        .rst_ni (rst_ni),
-        .flush_i('0),
+        .clk_i     (clk_i),
+        .rst_ni    (rst_ni),
+        .flush_i   ('0),
         .testmode_i('0),
-        .full_o(full[i]),
-        .empty_o(empty[i]),
-        .usage_o(),
-        .data_i(fifo_entry_i[i]),
-        .push_i(push_enable),
-        .data_o(fifo_entry_o[i]),
-        .pop_i(pop)
+        .full_o    (full[i]),
+        .empty_o   (empty[i]),
+        .usage_o   (),
+        .data_i    (fifo_entry_i[i]),
+        .push_i    (push_enable),
+        .data_o    (fifo_entry_o[i]),
+        .pop_i     (pop)
     );
 end
 
@@ -141,6 +145,9 @@ always_comb begin
         fifo_entry_i[i].tval = tval_i;
         fifo_entry_i[i].priv = priv_i;
     end
+
+    // assigning mux output
+    fifo_entry_mux = fifo_entry[cnt_val];
 end
 
 always_ff @( posedge clk_i, negedge rst_ni ) begin
