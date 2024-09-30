@@ -55,6 +55,12 @@ typedef struct packed {
     //logic []                sijump; // non mandatory
 } fifo_entry_s;
 
+// states definition for FSM
+typedef enum logic { 
+    IDLE = 0,
+    COUNT = 0
+} state_e;
+
 /* mask and match parameter for itype determination */
 parameter MASK_BEQ = 32'h707f;
 parameter MATCH_BEQ = 32'h63;
