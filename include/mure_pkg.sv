@@ -38,17 +38,17 @@ typedef enum logic[ITYPE_LEN-1:0] {
 
 // struct to store data inside the uop FIFO
 typedef struct packed {
-    logic                   valid,
-    logic [XLEN-1:0]        pc,
-    logic [INST_LEN-1:0]    inst_data,
-    logic [ITYPE_LEN-1:0]   itype, // determined in itype detector
-    logic                   compressed,
-    logic                   exception,
-    logic                   interrupt,
-    logic                   eret,
-    logic [CAUSE_LEN-1:0]   cause,
-    logic [XLEN-1:0]        tval,
-    logic [PRIV_LEN-1:0]    priv,
+    logic                   valid;
+    logic [XLEN-1:0]        pc;
+    logic [INST_LEN-1:0]    inst_data;
+    logic [ITYPE_LEN-1:0]   itype; // determined in itype detector
+    logic                   compressed;
+    logic                   exception;
+    logic                   interrupt;
+    logic                   eret;
+    logic [CAUSE_LEN-1:0]   cause;
+    logic [XLEN-1:0]        tval;
+    logic [PRIV_LEN-1:0]    priv;
     // TODO: add eret
     //logic []                context; // non mandatory
     //logic []                ctype;   // non mandatory
@@ -59,7 +59,7 @@ typedef struct packed {
 // states definition for FSM
 typedef enum logic { 
     IDLE = 0,
-    COUNT = 0
+    COUNT = 1
 } state_e;
 
 /* mask and match parameter for itype determination */
