@@ -4,29 +4,28 @@
 
 /* TOP LEVEL MODULE */
 
-module multiple_retirement #(
-    parameter int unsigned NrRetiredInstr = 2 // placeholder value, CVA6
-)
+module multiple_retirement
 (
     input logic clk_i,
     input logic rst_ni,
 
     /* data from the CPU */
     // inputs
-    input logic [NrRetiredInstr-1:0][mure_pkg::IRETIRE_LEN-1:0] iretire_i,
-    input logic [NrRetiredInstr-1:0]                            ilastsize_i,
-    input logic [NrRetiredInstr-1:0][mure_pkg::ITYPE_LEN-1:0]   itype_i,
-    input logic [mure_pkg::CAUSE_LEN-1:0]                       cause_i,
-    input logic [mure_pkg::XLEN-1:0]                            tval_i,
-    input logic [mure_pkg::PRIV_LEN-1:0]                        priv_i,
-    input logic [NrRetiredInstr-1:0][mure_pkg::XLEN-1:0]        iaddr_i,
+    input logic [mure_pkg::NRET-1:0]                            valid_i,
+    input logic [mure_pkg::NRET-1:0][mure_pkg::XLEN-1:0]        pc_i,
+    input logic [mure_pkg::NRET-1:0][mure_pkg::INST_LEN-1:0]    inst_data_i,
+    input logic [mure_pkg::NRET-1:0]                            compressed_i,
+    input logic exception_i,
+    input logic interrupt_i,
+    input logic eret_i,
     //input logic [mure_pkg::CTX_LEN-1:0]                         context_i, // non mandatory
     //input logic [mure_pkg::TIME_LEN-1:0]                        time_i, // non mandatory
     //input logic [mure_pkg::CTYPE_LEN-1:0]                       ctype_i, // non mandatory
-    //input logic [NrRetiredInstr-1:0][mure_pkg::SIJ_LEN-1]       sijump_i // non mandatory
+    //input logic [mure_pkg::NRET-1:0][mure_pkg::SIJ_LEN-1]       sijump_i // non mandatory
 
     // outputs
     /* the output of the module goes directly into the trace_encoder module */
+    output logic                                                valid_o,
     output logic [mure_pkg::IRETIRE_LEN-1:0]                    iretire_o,
     output logic                                                ilastsize_o,
     output logic [mure_pkg::ITYPE_LEN-1:0]                      itype_o,
@@ -41,27 +40,27 @@ module multiple_retirement #(
 );
 
 // entries for the FIFOs
-mure_pkg::uop_entry_s [NrRetiredInstr-1:0]  uop_entry_i, uop_entry_o;
-mure_pkg::common_entry_s                    common_entry_i, common_entry_o;
+mure_pkg::uop_entry_s               uop_entry_i[mure_pkg::NRET-1:0], uop_entry_o[mure_pkg::NRET-1:0];
+mure_pkg::common_entry_s            common_entry_i, common_entry_o;
 // FIFOs management
 logic                               pop; // signal to pop FIFOs
-logic                               empty[NrRetiredInstr]; // signal used to enable counter
-logic                               full[NrRetiredInstr];
+logic                               empty[mure_pkg::NRET]; // signal used to enable counter
+logic                               full[mure_pkg::NRET];
 logic                               push_enable;
 // counter management
-logic [$clog2(NrRetiredInstr)-1:0]  cnt_val;
+logic [$clog2(mure_pkg::NRET)-1:0]  cnt_val;
 logic                               clear_counter;
 logic                               enable_counter;
 
 // assignments
-assign pop = cnt_val == NrRetiredInstr-1;
+assign pop = cnt_val == mure_pkg::NRET-1;
 assign push_enable = |iretire_i && !full[0];
-assign clear_counter = cnt_val == NrRetiredInstr-1;
+assign clear_counter = cnt_val == mure_pkg::NRET-1;
 assign enable_counter = !empty[0]; // the counter goes on if FIFOs are not empty
 
 /* FIFOs */
 /* commit ports FIFOs */
-for (genvar i = 0; i < NrRetiredInstr; i++) begin
+for (genvar i = 0; i < mure_pkg::NRET; i++) begin
     fifo_v3 #(
         .DEPTH(16),
         .dtype(mure_pkg::uop_entry_s)
@@ -80,27 +79,9 @@ for (genvar i = 0; i < NrRetiredInstr; i++) begin
     );
 end
 
-/* common FIFO */
-fifo_v3 #(
-    .DEPTH(16),
-    .dtype(mure_pkg::common_entry_s)
-) ingressFIFO_cmn (
-    .clk_i  (clk_i),
-    .rst_ni (rst_ni),
-    .flush_i('0),
-    .testmode_i('0),
-    .full_o(),
-    .empty_o(),
-    .usage_o(),
-    .data_i(common_entry_i),
-    .push_i(push_enable),
-    .data_o(common_entry_o),
-    .pop_i(pop)
-);
-
 // counter instantation - from common_cells
 counter #(
-    .WIDTH($clog2(NrRetiredInstr)),
+    .WIDTH($clog2(mure_pkg::NRET)),
     .STICKY_OVERFLOW('0)
 ) i_mux_arbiter ( // change name?
     .clk_i     (clk_i),
@@ -125,7 +106,7 @@ always_comb begin
     iaddr_o = '0;
 
     // populating uop FIFO entry
-    for (int i = 0; i < NrRetiredInstr; i++) begin
+    for (int i = 0; i < mure_pkg::NRET; i++) begin
         uop_entry_i[i].itype = itype_i[i];
         uop_entry_i[i].iaddr = iaddr_i[i];
         uop_entry_i[i].iretire = iretire_i[i];
