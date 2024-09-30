@@ -55,7 +55,7 @@ always_comb begin
     valid_d = '0;
 
     case (current_state)
-    IDLE: begin
+    mure_pkg::IDLE: begin
         if (fifo_entry_i.itype == 0 && fifo_entry_i.valid) begin // standard instr and valid
             // sets iaddr, increases iretire
             iaddr_d = fifo_entry_i.pc;
@@ -75,7 +75,7 @@ always_comb begin
         end
     end
 
-    COUNT: begin
+    mure_pkg::COUNT: begin
         if (fifo_entry_i.itype == 0 && fifo_entry_i.valid) begin // standard inst
             // increases iretire
             iretire_d = fifo_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
@@ -101,7 +101,7 @@ end
 // sequential logic
 always_ff @(posedge clk_i, negedge rst_ni) begin
     if (!rst_ni) begin
-        current_state <= IDLE;
+        current_state <= mure_pkg::IDLE;
         iaddr_q <= '0;
         iretire_q <= '0;
         ilastsize_q <= '0;
