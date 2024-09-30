@@ -38,7 +38,7 @@ typedef enum logic[ITYPE_LEN-1:0] {
 
 // struct to store data inside the uop FIFO
 typedef struct packed {
-    logic valid,
+    logic                   valid,
     logic [XLEN-1:0]        pc,
     logic [INST_LEN-1:0]    inst_data,
     logic                   compressed,
