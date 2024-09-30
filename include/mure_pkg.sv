@@ -49,6 +49,7 @@ typedef struct packed {
     logic [CAUSE_LEN-1:0]   cause,
     logic [XLEN-1:0]        tval,
     logic [PRIV_LEN-1:0]    priv,
+    // TODO: add eret
     //logic []                context; // non mandatory
     //logic []                ctype;   // non mandatory
     //logic []                time; // non mandatory
