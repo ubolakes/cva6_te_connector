@@ -7,7 +7,7 @@
 it determines the iaddr, ilastsize, iretire
 */
 
-module ingress_fsm (
+module fsm (
     input logic                                 clk_i,
     input logic                                 rst_ni,
 
@@ -53,6 +53,9 @@ always_comb begin
     next_state = current_state;
     // init
     valid_d = '0;
+    iretire_d = '0;
+    ilastsize_d = '0;
+    itype_d = '0;
 
     case (current_state)
     mure_pkg::IDLE: begin
