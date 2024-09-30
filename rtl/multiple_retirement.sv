@@ -40,8 +40,7 @@ module multiple_retirement
 );
 
 // entries for the FIFOs
-mure_pkg::uop_entry_s               uop_entry_i[mure_pkg::NRET-1:0], uop_entry_o[mure_pkg::NRET-1:0];
-mure_pkg::common_entry_s            common_entry_i, common_entry_o;
+mure_pkg::fifo_entry_s              fifo_entr_i[mure_pkg::NRET-1:0], fifo_entry_o[mure_pkg::NRET-1:0];
 // FIFOs management
 logic                               pop; // signal to pop FIFOs
 logic                               empty[mure_pkg::NRET]; // signal used to enable counter
@@ -72,9 +71,9 @@ for (genvar i = 0; i < mure_pkg::NRET; i++) begin
         .full_o(full[i]),
         .empty_o(empty[i]),
         .usage_o(),
-        .data_i(uop_entry_i[i]),
+        .data_i(fifo_entry_i[i]),
         .push_i(push_enable),
-        .data_o(uop_entry_o[i]),
+        .data_o(fifo_entry_o[i]),
         .pop_i(pop)
     );
 end
@@ -96,35 +95,19 @@ counter #(
 );
 
 always_comb begin
-    // initialization
-    iretire_o = '0;
-    ilastsize_o = '0;
-    itype_o = '0;
-    cause_o = '0;
-    tval_o = '0;
-    priv_o = '0;
-    iaddr_o = '0;
-
     // populating uop FIFO entry
     for (int i = 0; i < mure_pkg::NRET; i++) begin
-        uop_entry_i[i].itype = itype_i[i];
-        uop_entry_i[i].iaddr = iaddr_i[i];
-        uop_entry_i[i].iretire = iretire_i[i];
-        uop_entry_i[i].ilastsize = ilastsize_i[i];
+        fifo_entry_i[i].valid = valid_i;
+        fifo_entry_i[i].pc = pc_i;
+        fifo_entry_i[i].inst_data = inst_data_i;
+        fifo_entry_i[i].compressed = compressed_i;
+        fifo_entry_i[i].exception = exception_i;
+        fifo_entry_i[i].interrupt = interrupt_i;
+        fifo_entry_i[i].eret = eret_i;
+        fifo_entry_i[i].cause = cause_i;
+        fifo_entry_i[i].tval = tval_i;
+        fifo_entry_i[i].priv = priv_i;
     end
-    // populating common FIFO entry
-    common_entry_i.cause = cause_i;
-    common_entry_i.tval = tval_i;
-    common_entry_i.priv = priv_i;
-
-    // determinating output
-    iretire_o = uop_entry_o[cnt_val].iretire;
-    ilastsize_o = uop_entry_o[cnt_val].ilastsize;
-    itype_o = uop_entry_o[cnt_val].itype;
-    iaddr_o = uop_entry_o[cnt_val].iaddr;
-    cause_o = common_entry_o.cause;
-    tval_o = common_entry_o.tval;
-    priv_o = common_entry_o.priv;
 end
 
 endmodule
