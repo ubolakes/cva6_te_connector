@@ -52,7 +52,7 @@ module tb_fsm ();
         .iaddr_o     (iaddr_o)
     );
 
-    logic [XX:0] test_vector[1000:0];
+    logic [218:0] test_vector[1000:0];
 
     initial begin
         $readmemb("tv_fsm", test_vector);
