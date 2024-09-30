@@ -15,7 +15,7 @@ module tb_multiple_retirement();
 
     // inputs
     logic [NrRetiredInstr-1:0][0:0]                 iretire_i;
-    logic [NrRetiredInstr-1:0][ILASTSIZE_LEN-1:0]   ilastsize_i;
+    logic [NrRetiredInstr-1:0][0:0]   ilastsize_i;
     logic [NrRetiredInstr-1:0][ITYPE_LEN-1:0]       itype_i;
     logic [CAUSE_LEN-1:0]                           cause_i;
     logic [XLEN-1:0]                                tval_i;
@@ -23,8 +23,8 @@ module tb_multiple_retirement();
     logic [NrRetiredInstr-1:0][XLEN-1:0]            iaddr_i;
 
     // outputs
-    logic [0:0]                                     iretire_o;
-    logic [ILASTSIZE_LEN-1:0]                   ilastsize_o;
+    logic [0:0]                                 iretire_o;
+    logic                                       ilastsize_o;
     logic [ITYPE_LEN-1:0]                       itype_o;
     logic [CAUSE_LEN-1:0]                       cause_o;
     logic [XLEN-1:0]                            tval_o;
@@ -33,7 +33,7 @@ module tb_multiple_retirement();
 
     // testing only outputs
     logic                                       expected_iretire;
-    logic [ILASTSIZE_LEN-1:0]                   expected_ilastsize;
+    logic                                       expected_ilastsize;
     logic [ITYPE_LEN-1:0]                       expected_itype;
     logic [CAUSE_LEN-1:0]                       expected_cause;
     logic [XLEN-1:0]                            expected_tval;
