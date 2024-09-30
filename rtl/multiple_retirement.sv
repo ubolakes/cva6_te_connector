@@ -40,7 +40,11 @@ module multiple_retirement
 );
 
 // entries for the FIFOs
-mure_pkg::fifo_entry_s              fifo_entr_i[mure_pkg::NRET-1:0], fifo_entry_o[mure_pkg::NRET-1:0];
+mure_pkg::fifo_entry_s              fifo_entry_i[mure_pkg::NRET-1:0], fifo_entry_o[mure_pkg::NRET-1:0];
+mure_pkg::fifo_entry_s              fifo_entry0_d, fifo_entry0_q;
+mure_pkg::fifo_entry_s              fifo_entry1_d, fifo_entry1_q;
+mure_pkg::fifo_entry_s              fifo_entry2_d, fifo_entry2_q;
+mure_pkg::fifo_entry_s              fifo_entry;
 // FIFOs management
 logic                               pop; // signal to pop FIFOs
 logic                               empty[mure_pkg::NRET]; // signal used to enable counter
@@ -56,6 +60,9 @@ assign pop = cnt_val == mure_pkg::NRET-1;
 assign push_enable = |iretire_i && !full[0];
 assign clear_counter = cnt_val == mure_pkg::NRET-1;
 assign enable_counter = !empty[0]; // the counter goes on if FIFOs are not empty
+assign fifo_entry0_d = fifo_entry_i;
+assign fifo_entry1_d = fifo_entry0_q;
+assign fifo_entry2_d = fifo_entry1_q;
 
 /* FIFOs */
 /* commit ports FIFOs */
@@ -94,11 +101,21 @@ counter #(
     .overflow_o()
 );
 
+// itype detector
+itype_detector i_itype_detector (
+    .clk_i          (clk_i),
+    .rst_ni         (rst_ni),
+    .lc_fifo_entry_i(fifo_entry2_q),
+    .tc_fifo_entry_i(fifo_entry1_q),
+    .nc_fifo_entry_i(fifo_entry0_q),
+    .tc_fifo_entry_o(fifo_entry)
+);
+
 // fsm instantiation
-fsm i_fsm(
+fsm i_fsm (
     .clk_i       (clk_i),
     .rst_ni      (rst_ni),
-    .fifo_entry_i(),
+    .fifo_entry_i(fifo_entry),
     .valid_o     (valid_o),
     .iretire_o   (iretire_o),
     .ilastsize_o (ilastsize_o),
@@ -123,6 +140,18 @@ always_comb begin
         fifo_entry_i[i].cause = cause_i;
         fifo_entry_i[i].tval = tval_i;
         fifo_entry_i[i].priv = priv_i;
+    end
+end
+
+always_ff @( posedge clk_i, negedge rst_ni ) begin
+    if (!rst_ni) begin
+        fifo_entry0_q <= '0;
+        fifo_entry1_q <= '0;
+        fifo_entry2_q <= '0;
+    end else begin
+        fifo_entry0_q <= fifo_entry0_d;
+        fifo_entry1_q <= fifo_entry1_d;
+        fifo_entry2_q <= fifo_entry2_d;
     end
 end
 
