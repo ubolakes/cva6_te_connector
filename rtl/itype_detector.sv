@@ -9,23 +9,14 @@ it produces the type of the instruction
 
 module itype_detector
 (
-    input logic                         clk_i,
-    input logic                         rst_ni,
+    input logic                     clk_i,
+    input logic                     rst_ni,
 
-    input logic                         pc_valid_i,
-    input logic                         cc_valid_i,
-    input logic                         nc_valid_i,
-    input logic [mure_pkg::XLEN-1:0]    pc_iaddr_i,
-    input logic [mure_pkg::XLEN-1:0]    cc_iaddr_i,
-    input logic [mure_pkg::XLEN-1:0]    nc_iaddr_i,
-    input logic [mure_pkg::XLEN-1:0]    cc_inst_data_i,
-    input logic                         cc_compressed_i,
-    input logic                         cc_exception_i,
-    input logic                         cc_interrupt_i,
-    input logic                         cc_eret_i,
-    //input logic                         implicit_return_i, // non mandatory
-    
-    output mure_pkg::itype_e            itype_o
+    input mure_pkg::fifo_entry_s    lc_fifo_entry_i,
+    input mure_pkg::fifo_entry_s    tc_fifo_entry_i,
+    input mure_pkg::fifo_entry_s    nc_fifo_entry_i,
+        
+    output mure_pkg::fifo_entry_s   tc_fifo_entry_o    
 );
     /*  EXPLANATION:
         This module considers the lc, tc, nc signals and determines
@@ -35,80 +26,105 @@ module itype_detector
         synchronous with the branch_taken signal.
     */
 
-    logic cc_branch;
-    logic cc_branch_taken;
-    logic cc_updiscon;
-    //logic is_c_jalr;
-    //logic is_c_jr;
-    logic cc_is_jump;
-    logic cc_nc_valid;
-    logic one_cycle;
-    logic more_cycles;
-    logic cc_branch_d, cc_branch_q;
-    logic cc_updiscon_d, cc_updiscon_q;
+    // signals declaration
+    logic                       lc_valid;
+    logic                       tc_valid;
+    logic                       nc_valid;
+    logic [mure_pkg::XLEN-1:0]  lc_pc;
+    logic [mure_pkg::XLEN-1:0]  tc_pc;
+    logic [mure_pkg::XLEN-1:0]  nc_pc;
+    logic [mure_pkg::XLEN-1:0]  tc_inst_data;
+    logic                       tc_compressed;
+    logic                       tc_exception;
+    logic                       tc_interrupt;
+    logic                       tc_eret;
+    logic                       tc_branch;
+    logic                       tc_branch_taken;
+    logic                       tc_updiscon;
+    logic                       is_c_jalr;
+    logic                       is_c_jr;
+    logic                       tc_is_jump;
+    logic                       tc_nc_valid;
+    logic                       one_cycle;
+    logic                       more_cycles;
+    logic                       tc_branch_d, tc_branch_q;
+    logic                       tc_updiscon_d, tc_updiscon_q;
 
-    assign cc_nc_valid = cc_valid_i && nc_valid_i;
-    assign one_cycle = cc_iaddr_i != nc_iaddr_i && cc_iaddr_i != pc_iaddr_i;
-    assign more_cycles = cc_iaddr_i != nc_iaddr_i && cc_iaddr_i == pc_iaddr_i;
-    assign cc_branch_d =    (((cc_inst_data_i & mure_pkg::MASK_BEQ)      == mure_pkg::MATCH_BEQ) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_BNE)      == mure_pkg::MATCH_BNE) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_BLT)      == mure_pkg::MATCH_BLT) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_BGE)      == mure_pkg::MATCH_BGE) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_BLTU)     == mure_pkg::MATCH_BLTU) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_BGEU)     == mure_pkg::MATCH_BGEU) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_P_BNEIMM) == mure_pkg::MATCH_P_BNEIMM) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_P_BEQIMM) == mure_pkg::MATCH_P_BEQIMM) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_C_BEQZ)   == mure_pkg::MATCH_C_BEQZ) ||
-                             ((cc_inst_data_i & mure_pkg::MASK_C_BNEZ)   == mure_pkg::MATCH_C_BNEZ)) && 
-                            cc_valid_i;
-    assign cc_branch_taken =    (cc_compressed_i ?
-                                !(cc_iaddr_i + 2 == nc_iaddr_i) :
-                                !(cc_iaddr_i + 4 == nc_iaddr_i)) &&
-                                cc_nc_valid && (more_cycles || one_cycle);
-    // compressed inst - not supported by snitch
+    // assignments
+    assign lc_valid = lc_fifo_entry_i.valid;
+    assign tc_valid = tc_fifo_entry_i.valid;
+    assign nc_valid = nc_fifo_entry_i.valid;
+    assign lc_pc = lc_fifo_entry_i.pc;
+    assign tc_pc = tc_fifo_entry_i.pc;
+    assign nc_pc = nc_fifo_entry_i.pc;
+    assign tc_inst_data = tc_fifo_entry_i.inst_data;
+    assign tc_compressed = tc_fifo_entry_i.compressed;
+    assign tc_exception = tc_fifo_entry_i.exception;
+    assign tc_interrupt = tc_fifo_entry_i.interrupt;
+    assign tc_eret = tc_fifo_entry_i.eret;
+    assign tc_nc_valid = tc_valid && nc_valid;
+    assign one_cycle = tc_pc != nc_pc && tc_pc != lc_pc;
+    assign more_cycles = tc_pc != nc_pc && tc_pc == lc_pc;
+    assign tc_branch_d =    (((tc_inst_data & mure_pkg::MASK_BEQ)      == mure_pkg::MATCH_BEQ) ||
+                             ((tc_inst_data & mure_pkg::MASK_BNE)      == mure_pkg::MATCH_BNE) ||
+                             ((tc_inst_data & mure_pkg::MASK_BLT)      == mure_pkg::MATCH_BLT) ||
+                             ((tc_inst_data & mure_pkg::MASK_BGE)      == mure_pkg::MATCH_BGE) ||
+                             ((tc_inst_data & mure_pkg::MASK_BLTU)     == mure_pkg::MATCH_BLTU) ||
+                             ((tc_inst_data & mure_pkg::MASK_BGEU)     == mure_pkg::MATCH_BGEU) ||
+                             ((tc_inst_data & mure_pkg::MASK_P_BNEIMM) == mure_pkg::MATCH_P_BNEIMM) ||
+                             ((tc_inst_data & mure_pkg::MASK_P_BEQIMM) == mure_pkg::MATCH_P_BEQIMM) ||
+                             ((tc_inst_data & mure_pkg::MASK_C_BEQZ)   == mure_pkg::MATCH_C_BEQZ) ||
+                             ((tc_inst_data & mure_pkg::MASK_C_BNEZ)   == mure_pkg::MATCH_C_BNEZ)) && 
+                            tc_valid;
+    assign tc_branch_taken =    (tc_compressed ?
+                                !(tc_pc + 2 == nc_pc) :
+                                !(tc_pc + 4 == nc_pc)) &&
+                                tc_nc_valid && (more_cycles || one_cycle);
+    // compressed inst
     /* c.jalr and c.jr are both decompressed in order to use an uncompressed jalr */
-    /*assign is_c_jalr = ((nc_inst_data_i & MASK_C_JALR) == MATCH_C_JALR)
-                         && ((nc_inst_data_i & MASK_RD) != 0);
-    assign is_c_jr = ((nc_inst_data_i & MASK_C_JR) == MATCH_C_JR)
-                       && ((nc_inst_data_i & MASK_RD) != 0);*/
+    assign is_c_jalr = ((nc_inst_data & MASK_C_JALR) == MATCH_C_JALR)
+                         && ((nc_inst_data & MASK_RD) != 0);
+    assign is_c_jr = ((nc_inst_data & MASK_C_JR) == MATCH_C_JR)
+                       && ((nc_inst_data & MASK_RD) != 0);
     // non compressed inst
-    assign cc_is_jump = ((cc_inst_data_i & mure_pkg::MASK_JALR) == mure_pkg::MATCH_JALR) &&
-                        cc_valid_i; /* || is_c_jalr || is_c_jr*/;
-    assign cc_updiscon_d = (cc_is_jump || cc_exception_i) &&
-                            cc_valid_i; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
-    assign cc_updiscon = (one_cycle || more_cycles) ? cc_updiscon_d : 0;
-    assign cc_branch = (one_cycle || more_cycles) ? cc_branch_d : 0;
+    assign tc_is_jump = ((tc_inst_data & mure_pkg::MASK_JALR) == mure_pkg::MATCH_JALR) &&
+                        tc_valid || is_c_jalr || is_c_jr;
+    assign tc_updiscon_d = (tc_is_jump || tc_exception) &&
+                            tc_valid; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
+    assign tc_updiscon = (one_cycle || more_cycles) ? tc_updiscon_d : 0;
+    assign tc_branch = (one_cycle || more_cycles) ? tc_branch_d : 0;
+    assign tc_fifo_entry_o = tc_fifo_entry_i;
 
     // assigning the itype
     always_comb begin
         // initialization
-        itype_o = mure_pkg::STD;
+        itype = mure_pkg::STD;
 
         // exception
-        if (cc_exception_i) begin
-            itype_o = mure_pkg::EXC;
+        if (tc_exception) begin
+            itype = mure_pkg::EXC;
         end
         // interrupt
-        if (cc_interrupt_i) begin
-            itype_o = mure_pkg::INT;
+        if (tc_interrupt) begin
+            itype = mure_pkg::INT;
         end
         // exception or interrupt return
-        if (cc_eret_i) begin
-            itype_o = mure_pkg::ERET;
+        if (tc_eret) begin
+            itype = mure_pkg::ERET;
         end
         // nontaken branch
-        if (cc_branch && ~cc_branch_taken) begin
-            itype_o = mure_pkg::NTB;
+        if (tc_branch && ~tc_branch_taken) begin
+            itype = mure_pkg::NTB;
         end
         // taken branch
-        if (cc_branch && cc_branch_taken) begin
-            itype_o = mure_pkg::TB;
+        if (tc_branch && tc_branch_taken) begin
+            itype = mure_pkg::TB;
         end
         // uninferable jump
-        if (mure_pkg::ITYPE_LEN == 3 && cc_updiscon) begin
-            itype_o = mure_pkg::UIJ;
+        if (mure_pkg::ITYPE_LEN == 3 && tc_updiscon) begin
+            itype = mure_pkg::UIJ;
         end else if (mure_pkg::ITYPE_LEN > 3) begin // reserved
-            itype_o = mure_pkg::RES;
+            itype = mure_pkg::RES;
         end
         // other case for ITYPE_LEN == 4
         /*
@@ -126,34 +142,36 @@ module itype_detector
         end
         // inferable jump
         if () begin
-            itype_o = IJ;
+            itype = IJ;
         end
         // co-routine swap
         if () begin
-            itype_o = CRS;
+            itype = CRS;
         end
         // return
         if () begin
-            itype_o = RET;
+            itype = RET;
         end
         // other uninferable jump
         if () begin
-            itype_o = OUIJ;
+            itype = OUIJ;
         end
         // other inferable jump
         if () begin
-            itype_o = OIJ;
+            itype = OIJ;
         end
         */
+
+        tc_fifo_entry_i.itype = itype;
     end
 
     always_ff @( posedge clk_i, negedge rst_ni ) begin
         if(~rst_ni) begin
-            cc_branch_q <= '0;
-            cc_updiscon_q <= '0;
+            tc_branch_q <= '0;
+            tc_updiscon_q <= '0;
         end else if (more_cycles) begin
-            cc_branch_q <= cc_branch_d;
-            cc_updiscon_q <= cc_updiscon_d;
+            tc_branch_q <= tc_branch_d;
+            tc_updiscon_q <= tc_updiscon_d;
         end
     end
 
