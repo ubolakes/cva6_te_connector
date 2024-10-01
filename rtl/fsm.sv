@@ -127,6 +127,7 @@ always_ff @(posedge clk_i, negedge rst_ni) begin
     end else if (update_iaddr) begin
         current_state <= next_state; 
         iaddr_q <= iaddr_d;
+        iretire_q <= iretire_d;
     end else begin
         current_state <= next_state;
         iretire_q <= iretire_d;
