@@ -84,6 +84,8 @@ always_comb begin
             valid_d = '1;
             // remains here
             next_state = mure_pkg::IDLE;
+        end else begin
+            next_state = mure_pkg::IDLE;
         end
     end
 
@@ -107,6 +109,8 @@ always_comb begin
             valid_d = '1;
             // goes to IDLE
             next_state = mure_pkg::IDLE;
+        end else begin
+            next_state = mure_pkg::COUNT;
         end
     end
 
