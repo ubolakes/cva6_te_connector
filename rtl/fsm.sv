@@ -139,6 +139,7 @@ always_ff @(posedge clk_i, negedge rst_ni) begin
         cause_q <= '0;
         tval_q <= '0;
         priv_q <= '0;
+        valid_q <= valid_d;
     end else begin
         current_state <= next_state;
         iaddr_q <= iaddr_d;
