@@ -133,6 +133,4 @@ always_ff @(posedge clk_i, negedge rst_ni) begin
     end
 end
 
-
 endmodule
-
