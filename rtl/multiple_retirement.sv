@@ -4,17 +4,19 @@
 
 /* TOP LEVEL MODULE */
 
-module multiple_retirement
+module multiple_retirement #(
+    localparam NRET = 2
+)
 (
     input logic clk_i,
     input logic rst_ni,
 
     /* data from the CPU */
     // inputs
-    input logic [mure_pkg::NRET-1:0]                            valid_i,
-    input logic [mure_pkg::NRET-1:0][mure_pkg::XLEN-1:0]        pc_i,
-    input logic [mure_pkg::NRET-1:0][mure_pkg::INST_LEN-1:0]    inst_data_i,
-    input logic [mure_pkg::NRET-1:0]                            compressed_i,
+    input logic [NRET-1:0]                                      valid_i,
+    input logic [NRET-1:0][mure_pkg::XLEN-1:0]                  pc_i,
+    input logic [NRET-1:0][mure_pkg::INST_LEN-1:0]              inst_data_i,
+    input logic [NRET-1:0]                                      compressed_i,
     input logic [mure_pkg::CAUSE_LEN-1:0]                       cause_i,
     input logic [mure_pkg::XLEN-1:0]                            tval_i,
     input logic [mure_pkg::PRIV_LEN-1:0]                        priv_i,
@@ -24,7 +26,7 @@ module multiple_retirement
     //input logic [mure_pkg::CTX_LEN-1:0]                         context_i, // non mandatory
     //input logic [mure_pkg::TIME_LEN-1:0]                        time_i, // non mandatory
     //input logic [mure_pkg::CTYPE_LEN-1:0]                       ctype_i, // non mandatory
-    //input logic [mure_pkg::NRET-1:0][mure_pkg::SIJ_LEN-1]       sijump_i // non mandatory
+    //input logic [NRET-1:0][mure_pkg::SIJ_LEN-1]                 sijump_i // non mandatory
 
     // outputs
     /* the output of the module goes directly into the trace_encoder module */
@@ -43,7 +45,7 @@ module multiple_retirement
 );
 
 // entries for the FIFOs
-mure_pkg::fifo_entry_s              fifo_entry_i[mure_pkg::NRET-1:0], fifo_entry_o[mure_pkg::NRET-1:0];
+mure_pkg::fifo_entry_s              fifo_entry_i[NRET-1:0], fifo_entry_o[NRET-1:0];
 mure_pkg::fifo_entry_s              fifo_entry_mux;
 mure_pkg::fifo_entry_s              fifo_entry0_d, fifo_entry0_q;
 mure_pkg::fifo_entry_s              fifo_entry1_d, fifo_entry1_q;
@@ -51,18 +53,18 @@ mure_pkg::fifo_entry_s              fifo_entry2_d, fifo_entry2_q;
 mure_pkg::fifo_entry_s              fifo_entry;
 // FIFOs management
 logic                               pop; // signal to pop FIFOs
-logic                               empty[mure_pkg::NRET]; // signal used to enable counter
-logic                               full[mure_pkg::NRET];
+logic                               empty[NRET]; // signal used to enable counter
+logic                               full[NRET];
 logic                               push_enable;
 // counter management
-logic [$clog2(mure_pkg::NRET)-1:0]  cnt_val;
+logic [$clog2(NRET)-1:0]            cnt_val;
 logic                               clear_counter;
 logic                               enable_counter;
 
 // assignments
-assign pop = cnt_val == mure_pkg::NRET-1;
+assign pop = cnt_val == NRET-1;
 assign push_enable = (fifo_entry_i[0].valid || fifo_entry_i[1].valid) && !full[0];
-assign clear_counter = cnt_val == mure_pkg::NRET-1;
+assign clear_counter = cnt_val == NRET-1;
 assign enable_counter = !empty[0]; // the counter goes on if FIFOs are not empty
 assign fifo_entry0_d = fifo_entry_mux;
 assign fifo_entry1_d = fifo_entry0_q;
@@ -70,7 +72,7 @@ assign fifo_entry2_d = fifo_entry1_q;
 
 /* FIFOs */
 /* commit ports FIFOs */
-for (genvar i = 0; i < mure_pkg::NRET; i++) begin
+for (genvar i = 0; i < NRET; i++) begin
     fifo_v3 #(
         .DEPTH(16),
         .dtype(mure_pkg::fifo_entry_s)
@@ -91,7 +93,7 @@ end
 
 // counter instantation - from common_cells
 counter #(
-    .WIDTH($clog2(mure_pkg::NRET)),
+    .WIDTH($clog2(NRET)),
     .STICKY_OVERFLOW('0)
 ) i_mux_arbiter ( // change name?
     .clk_i     (clk_i),
@@ -132,7 +134,7 @@ fsm i_fsm (
 
 always_comb begin
     // populating uop FIFO entry
-    for (int i = 0; i < mure_pkg::NRET; i++) begin
+    for (int i = 0; i < NRET; i++) begin
         fifo_entry_i[i].valid = valid_i;
         fifo_entry_i[i].pc = pc_i;
         fifo_entry_i[i].inst_data = inst_data_i;
