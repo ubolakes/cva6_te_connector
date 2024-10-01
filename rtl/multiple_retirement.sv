@@ -63,7 +63,7 @@ logic                               enable_counter;
 
 // assignments
 assign pop = cnt_val == NRET-1;
-assign push_enable = (fifo_entry_i[0].valid || fifo_entry_i[1].valid) && !full[0];
+assign push_enable = |valid_i && !full[0];
 assign clear_counter = cnt_val == NRET-1;
 assign enable_counter = !empty[0]; // the counter goes on if FIFOs are not empty
 assign fifo_entry0_d = fifo_entry_mux;
