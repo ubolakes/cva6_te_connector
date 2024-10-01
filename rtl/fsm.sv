@@ -131,6 +131,7 @@ always_ff @(posedge clk_i, negedge rst_ni) begin
         valid_q <= '0;
         rst_sync_q <= '0;
     end else if (rst_sync_q) begin
+        current_state <= next_state;
         iaddr_q <= '0;
         iretire_q <= '0;
         ilastsize_q <= '0;
