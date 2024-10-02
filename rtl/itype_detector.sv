@@ -100,32 +100,22 @@ module itype_detector
         // initialization
         itype = mure_pkg::STD;
 
-        // exception
-        if (tc_exception) begin
+        if (tc_exception) begin // exception
             itype = mure_pkg::EXC;
-        end
-        // interrupt
-        if (tc_interrupt) begin
+        end else if (tc_interrupt) begin // interrupt
             itype = mure_pkg::INT;
-        end
-        // exception or interrupt return
-        if (tc_eret) begin
+        end else if (tc_eret) begin // exception or interrupt return
             itype = mure_pkg::ERET;
-        end
-        // nontaken branch
-        if (tc_branch && ~tc_branch_taken) begin
+        end else if (tc_branch && ~tc_branch_taken) begin // nontaken branch
             itype = mure_pkg::NTB;
-        end
-        // taken branch
-        if (tc_branch && tc_branch_taken) begin
+        end else if (tc_branch && tc_branch_taken) begin // taken branch
             itype = mure_pkg::TB;
-        end
-        // uninferable jump
-        if (mure_pkg::ITYPE_LEN == 3 && tc_updiscon) begin
+        end else if (mure_pkg::ITYPE_LEN == 3 && tc_updiscon) begin // uninferable jump
             itype = mure_pkg::UIJ;
         end else if (mure_pkg::ITYPE_LEN > 3) begin // reserved
             itype = mure_pkg::RES;
         end
+
         // other case for ITYPE_LEN == 4
         /*
         // uninferable call
