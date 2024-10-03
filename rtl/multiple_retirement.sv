@@ -20,7 +20,7 @@ module multiple_retirement #(
     input logic [mure_pkg::CAUSE_LEN-1:0]                       cause_i,
     input logic [mure_pkg::XLEN-1:0]                            tval_i,
     input logic [mure_pkg::PRIV_LEN-1:0]                        priv_i,
-    input logic                                                 exception_i,
+    input logic [NRET-1:0]                                      exception_i,
     input logic                                                 interrupt_i,
     input logic                                                 eret_i,
     //input logic [mure_pkg::CTX_LEN-1:0]                         context_i, // non mandatory
@@ -140,7 +140,7 @@ always_comb begin
         fifo_entry_i[i].inst_data = inst_data_i;
         fifo_entry_i[i].itype = '0; // init, defined in itype_detector
         fifo_entry_i[i].compressed = compressed_i;
-        fifo_entry_i[i].exception = exception_i;
+        fifo_entry_i[i].exception = exception_i[i];
         fifo_entry_i[i].interrupt = interrupt_i;
         fifo_entry_i[i].eret = eret_i;
         fifo_entry_i[i].cause = cause_i;
