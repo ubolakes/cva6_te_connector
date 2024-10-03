@@ -12,7 +12,7 @@ module tb_fsm ();
     logic reset;
 
     // inputs
-    fifo_entry_s fifo_entry_i;
+    uop_entry_s uop_entry_i;
 
     // outputs
     logic                   valid_o;
@@ -41,7 +41,7 @@ module tb_fsm ();
     fsm DUT (
         .clk_i       (clk),
         .rst_ni      (reset),
-        .fifo_entry_i(fifo_entry_i),
+        .uop_entry_i(uop_entry_i),
         .valid_o     (valid_o),
         .iretire_o   (iretire_o),
         .ilastsize_o (ilastsize_o),
@@ -63,7 +63,7 @@ module tb_fsm ();
 
     always @(posedge clk) begin // on posedge we get expected output
         {
-            fifo_entry_i,
+            uop_entry_i,
             expected_valid,
             expected_iretire,
             expected_ilastsize,

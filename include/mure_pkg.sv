@@ -53,7 +53,7 @@ typedef struct packed {
     //logic []                ctype;   // non mandatory
     //logic []                time; // non mandatory
     //logic []                sijump; // non mandatory
-} fifo_entry_s;
+} uop_entry_s;
 
 // states definition for FSM
 typedef enum logic { 

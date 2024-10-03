@@ -11,7 +11,7 @@ module fsm (
     input logic                                 clk_i,
     input logic                                 rst_ni,
 
-    input mure_pkg::fifo_entry_s                fifo_entry_i,
+    input mure_pkg::uop_entry_s                uop_entry_i,
 
     output logic                                valid_o,
     output logic [mure_pkg::IRETIRE_LEN-1:0]    iretire_o,
@@ -34,8 +34,8 @@ logic                           more_cycles;
 logic                           update_iaddr;
 
 /* assignments */
-assign exception = fifo_entry_i.itype == 1;
-assign special_inst = fifo_entry_i.itype > 1 && fifo_entry_i.valid || exception;
+assign exception = uop_entry_i.itype == 1;
+assign special_inst = uop_entry_i.itype > 1 && uop_entry_i.valid || exception;
 assign iretire_o = (one_cycle || more_cycles) ? iretire_d : iretire_q;
 assign iaddr_o = one_cycle ? iaddr_d : iaddr_q;
 
@@ -58,22 +58,22 @@ always_comb begin
 
     case (current_state)
     mure_pkg::IDLE: begin
-        if (fifo_entry_i.itype == 0 && fifo_entry_i.valid) begin // standard instr and valid
+        if (uop_entry_i.itype == 0 && uop_entry_i.valid) begin // standard instr and valid
             // sets iaddr, increases iretire
-            iaddr_d = fifo_entry_i.pc;
+            iaddr_d = uop_entry_i.pc;
             update_iaddr = '1;
-            iretire_d = fifo_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+            iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
             // goes to COUNT
             next_state = mure_pkg::COUNT;
         end else if (special_inst) begin // special inst as first inst
             // set all params for output
-            iaddr_d = fifo_entry_i.pc;
-            iretire_d = fifo_entry_i.compressed ? 1 : 2;
-            ilastsize_o = !fifo_entry_i.compressed;
-            itype_o = fifo_entry_i.itype;
-            cause_o = fifo_entry_i.cause;
-            tval_o = fifo_entry_i.tval;
-            priv_o = fifo_entry_i.priv;
+            iaddr_d = uop_entry_i.pc;
+            iretire_d = uop_entry_i.compressed ? 1 : 2;
+            ilastsize_o = !uop_entry_i.compressed;
+            itype_o = uop_entry_i.itype;
+            cause_o = uop_entry_i.cause;
+            tval_o = uop_entry_i.tval;
+            priv_o = uop_entry_i.priv;
             // output readable
             valid_o = '1;
             // read now the output
@@ -86,21 +86,21 @@ always_comb begin
     end
 
     mure_pkg::COUNT: begin
-        if (fifo_entry_i.itype == 0 && fifo_entry_i.valid) begin // standard inst
+        if (uop_entry_i.itype == 0 && uop_entry_i.valid) begin // standard inst
             // increases iretire
-            iretire_d = fifo_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+            iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
             // remains here
             next_state = mure_pkg::COUNT;
         end else if (special_inst) begin
             // increases iretire
-            iretire_d = fifo_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+            iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
             // sets ilastsize
-            ilastsize_o = !fifo_entry_i.compressed;
+            ilastsize_o = !uop_entry_i.compressed;
             // sets all params for output
-            itype_o = fifo_entry_i.itype;
-            cause_o = fifo_entry_i.cause;
-            tval_o = fifo_entry_i.tval;
-            priv_o = fifo_entry_i.priv;
+            itype_o = uop_entry_i.itype;
+            cause_o = uop_entry_i.cause;
+            tval_o = uop_entry_i.tval;
+            priv_o = uop_entry_i.priv;
             // output readable
             valid_o = '1;
             // read now the output

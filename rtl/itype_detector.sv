@@ -12,11 +12,11 @@ module itype_detector
     input logic                     clk_i,
     input logic                     rst_ni,
 
-    input mure_pkg::fifo_entry_s    lc_fifo_entry_i,
-    input mure_pkg::fifo_entry_s    tc_fifo_entry_i,
-    input mure_pkg::fifo_entry_s    nc_fifo_entry_i,
+    input mure_pkg::uop_entry_s    lc_uop_entry_i,
+    input mure_pkg::uop_entry_s    tc_uop_entry_i,
+    input mure_pkg::uop_entry_s    nc_uop_entry_i,
         
-    output mure_pkg::fifo_entry_s   tc_fifo_entry_o    
+    output mure_pkg::uop_entry_s   tc_uop_entry_o    
 );
     /*  EXPLANATION:
         This module considers the lc, tc, nc signals and determines
@@ -51,17 +51,17 @@ module itype_detector
     logic                       tc_updiscon_d, tc_updiscon_q;
 
     // assignments
-    assign lc_valid = lc_fifo_entry_i.valid;
-    assign tc_valid = tc_fifo_entry_i.valid;
-    assign nc_valid = nc_fifo_entry_i.valid;
-    assign lc_pc = lc_fifo_entry_i.pc;
-    assign tc_pc = tc_fifo_entry_i.pc;
-    assign nc_pc = nc_fifo_entry_i.pc;
-    assign tc_inst_data = tc_fifo_entry_i.inst_data;
-    assign tc_compressed = tc_fifo_entry_i.compressed;
-    assign tc_exception = tc_fifo_entry_i.exception;
-    assign tc_interrupt = tc_fifo_entry_i.interrupt;
-    assign tc_eret = tc_fifo_entry_i.eret;
+    assign lc_valid = lc_uop_entry_i.valid;
+    assign tc_valid = tc_uop_entry_i.valid;
+    assign nc_valid = nc_uop_entry_i.valid;
+    assign lc_pc = lc_uop_entry_i.pc;
+    assign tc_pc = tc_uop_entry_i.pc;
+    assign nc_pc = nc_uop_entry_i.pc;
+    assign tc_inst_data = tc_uop_entry_i.inst_data;
+    assign tc_compressed = tc_uop_entry_i.compressed;
+    assign tc_exception = tc_uop_entry_i.exception;
+    assign tc_interrupt = tc_uop_entry_i.interrupt;
+    assign tc_eret = tc_uop_entry_i.eret;
     assign tc_nc_valid = tc_valid && nc_valid;
     assign one_cycle = tc_pc != nc_pc && tc_pc != lc_pc;
     assign more_cycles = tc_pc != nc_pc && tc_pc == lc_pc;
@@ -93,7 +93,7 @@ module itype_detector
                             tc_valid; // || nc_interrupt - not necessary in snitch since it's coupled w/exception
     assign tc_updiscon = (one_cycle || more_cycles) ? tc_updiscon_d : 0;
     assign tc_branch = (one_cycle || more_cycles) ? tc_branch_d : 0;
-    assign tc_fifo_entry_o = tc_fifo_entry_i;
+    assign tc_uop_entry_o = tc_uop_entry_i;
 
     // assigning the itype
     always_comb begin
@@ -152,7 +152,7 @@ module itype_detector
         end
         */
 
-        tc_fifo_entry_i.itype = itype;
+        tc_uop_entry_i.itype = itype;
     end
 
     always_ff @( posedge clk_i, negedge rst_ni ) begin
