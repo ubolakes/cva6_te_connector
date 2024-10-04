@@ -61,6 +61,13 @@ typedef enum logic {
     COUNT = 1
 } state_e;
 
+typedef enum logic [2:0] {
+    NoCF   = 0,    // No control flow prediction
+    Branch = 1,  // Branch
+    Jump   = 2,    // Jump to address from immediate
+    JumpR  = 3,   // Jump to address from registers
+    Return = 4   // Return Address Prediction
+} cf_t;
 /* mask and match parameter for itype determination */
 parameter MASK_BEQ = 32'h707f;
 parameter MATCH_BEQ = 32'h63;
