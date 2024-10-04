@@ -10,13 +10,11 @@ it produces the type of the instruction
 module itype_detector_alt
 (
     input logic                         commit_instr_valid_i,
-    input logic [mure_pkg::XLEN-1:0]    commit_instr_pc_i,
     input logic                         commit_ex_valid_i,
     input logic                         interrupt_i,
     input logic                         eret_i,
-    input pkg::cf_t                     resolved_branch_type_i, // TODO: set correct pkg name or define it
+    input mure_pkg::cf_t                resolved_branch_type_i, // TODO: set correct pkg name or define it
     input logic                         resolved_branch_taken_i,
-    input logic [mure_pkg::XLEN-1:0]    resolved_branch_pc_i,
 
     output mure_pkg::itype_e            itype_o
 );
@@ -28,20 +26,19 @@ module itype_detector_alt
     logic                       nontaken_branch;
     logic                       taken_branch;
     logic                       updiscon;
-    logic [mure_pkg::XLEN-1:0]  taken_branch_pc_reg;
-    logic [mure_pkg::XLEN-1:0]  not_taken_branch_pc_reg;
-    logic [mure_pkg::XLEN-1:0]  uninferable_jump_pc_reg;
 
     // assignments
-    assign exception = commit_instr_valid_i && commit_ex_valid_i;
+    assign exception = commit_ex_valid_i;
     assign interrupt = interrupt_i;
-    assign eret = eret_i;
-    assign nontaken_branch = ((not_taken_branch_pc_reg == commit_instr_pc_i) &&
-                             ~(commit_instr_pc_i == 0));
-    assign taken_branch = ((taken_branch_pc_reg == commit_instr_pc_i) && 
-                          ~(commit_instr_pc_i == 0));
-    assign updiscon = ((uninferable_jump_pc_reg == commit_instr_pc_i) && 
-                      ~(commit_instr_pc_i == 0));
+    assign eret = eret_i && commit_instr_valid_i;
+    assign nontaken_branch = resolved_branch_type_i == mure_pkg::Branch && 
+                             !resolved_branch_taken_i &&
+                             commit_instr_valid_i;
+    assign taken_branch = resolved_branch_type_i == mure_pkg::Branch &&
+                          resolved_branch_taken_i &&
+                          commit_instr_valid_i;
+    assign updiscon = resolved_branch_type_i == mure_pkg::JumpR &&
+                      commit_instr_valid_i;
     
     // assigning the itype
     always_comb begin
@@ -60,21 +57,6 @@ module itype_detector_alt
             itype_o = mure_pkg::TB;
         end else if (mure_pkg::ITYPE_LEN == 3 && updiscon) begin // uninferable discontinuity
             itype_o = mure_pkg::UIJ;
-        end else if (mure_pkg::ITYPE_LEN > 3) begin // reserved
-            itype_o = mure_pkg::RES;
-        end
-    end
-    
-    // sequential logic
-    always_ff @( posedge clk_i ) begin
-        if (resolved_branch_type_i == Branch && resolved_branch_taken_i) begin
-            taken_branch_pc_reg <= resolved_branch_pc_i; // branch taken
-        end 
-        else if (resolved_branch_type_i == Branch && !resolved_branch_i.is_taken) begin
-            not_taken_branch_pc_reg <= resolved_branch_pc_i; // branch not taken
-        end
-        else if (resolved_branch_type_i == JumpR) begin
-            uninferable_jump_pc_reg <= resolved_branch_pc_i;
         end
     end
 
