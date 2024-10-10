@@ -11,7 +11,9 @@ module fsm (
     input logic                                 clk_i,
     input logic                                 rst_ni,
 
-    input mure_pkg::uop_entry_s                uop_entry_i,
+    input mure_pkg::uop_entry_s                 uop_entry_i,
+    input logic [mure_pkg::CAUSE_LEN-1:0]       cause_i,
+    input logic [mure_pkg::XLEN-1:0]            tval_i,
 
     output logic                                valid_o,
     output logic [mure_pkg::IRETIRE_LEN-1:0]    iretire_o,
@@ -71,8 +73,8 @@ always_comb begin
             iretire_d = uop_entry_i.compressed ? 1 : 2;
             ilastsize_o = !uop_entry_i.compressed;
             itype_o = uop_entry_i.itype;
-            cause_o = uop_entry_i.cause;
-            tval_o = uop_entry_i.tval;
+            cause_o = cause_i;
+            tval_o = tval_i;
             priv_o = uop_entry_i.priv;
             // output readable
             valid_o = '1;
@@ -98,8 +100,8 @@ always_comb begin
             ilastsize_o = !uop_entry_i.compressed;
             // sets all params for output
             itype_o = uop_entry_i.itype;
-            cause_o = uop_entry_i.cause;
-            tval_o = uop_entry_i.tval;
+            cause_o = cause_i;
+            tval_o = tval_i;
             priv_o = uop_entry_i.priv;
             // output readable
             valid_o = '1;
