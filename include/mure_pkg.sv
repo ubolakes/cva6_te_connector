@@ -39,20 +39,9 @@ typedef enum logic[ITYPE_LEN-1:0] {
 typedef struct packed {
     logic                   valid;
     logic [XLEN-1:0]        pc;
-    logic [INST_LEN-1:0]    inst_data;
     logic [ITYPE_LEN-1:0]   itype; // determined in itype detector
     logic                   compressed;
-    logic                   exception;
-    logic                   interrupt;
-    logic                   eret;
-    logic [CAUSE_LEN-1:0]   cause;
-    logic [XLEN-1:0]        tval;
     logic [PRIV_LEN-1:0]    priv;
-    // TODO: add eret
-    //logic []                context; // non mandatory
-    //logic []                ctype;   // non mandatory
-    //logic []                time; // non mandatory
-    //logic []                sijump; // non mandatory
 } uop_entry_s;
 
 // states definition for FSM
