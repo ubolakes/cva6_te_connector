@@ -50,6 +50,7 @@ logic                       pop; // signal to pop FIFOs
 logic                       empty[NRET]; // signal used to enable counter
 logic                       full[NRET];
 logic                       push_enable;
+logic                       at_least_one_valid;
 // counter management
 logic [$clog2(NRET)-1:0]    cnt_val;
 logic                       clear_counter;
@@ -62,7 +63,7 @@ logic [mure_pkg::XLEN-1:0]      tval_d, tval_q;
 
 // assignments
 assign pop = cnt_val == NRET-1;
-assign push_enable = !full[0]; // TODO: add condition such that there's at least one valid inst in input
+assign push_enable = !full[0] && at_least_one_valid;
 assign clear_counter =  cnt_val == NRET-1 ||
                         itype[0] == mure_pkg::EXC ||
                         itype[0] == mure_pkg::INT;
@@ -149,6 +150,15 @@ generate
 endgenerate
 
 always_comb begin
+    // checking if at least one input is valid
+    at_least_one_valid = 0;
+    foreach(commit_instr_i[i]) begin
+        if (commit_instr_i[i].valid) begin
+            at_least_one_valid = 1;
+            break;
+        end
+    end
+
     // populating uop FIFO entries
     for (int i = 0; i < NRET; i++) begin
         uop_entry_i[i].valid = commit_instr_i.valid;
