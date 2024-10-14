@@ -140,12 +140,26 @@ generate
             .iaddr_o    (iaddr_o)
         );
     end else begin // more special inst per cycle 
-        // TODO: develop more complex FSM
         /*
         this FSM can output up to N packets in the same cycle
         and it's possibile because there might be up to N updiscon
         in the same cycle and they require a specific packet
         */
+        complex_fsm i_fsm (
+            .clk_i      (clk_i),
+            .rst_ni     (rst_ni),
+            .uop_entry_i(uop_entry_o),
+            .cause_i    (), // wait
+            .tval_i     (),
+            .valid_o    (valid_o),
+            .iretire_o  (iretire_o),
+            .ilastsize_o(ilastsize_o),
+            .itype_o    (itype_o),
+            .cause_o    (cause_o),
+            .tval_o     (tval_o),
+            .priv_o     (priv_o),
+            .iaddr_o    (iaddr_o)
+        );
     end
 endgenerate
 
