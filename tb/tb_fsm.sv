@@ -41,7 +41,7 @@ module tb_fsm ();
     fsm DUT (
         .clk_i       (clk),
         .rst_ni      (reset),
-        .uop_entry_i(uop_entry_i),
+        .uop_entry_i (uop_entry_i),
         .valid_o     (valid_o),
         .iretire_o   (iretire_o),
         .ilastsize_o (ilastsize_o),
@@ -117,9 +117,5 @@ module tb_fsm ();
         clk <= 1; #5;
         clk <= 0; #5;
     end
-
-
-
-
 
 endmodule
