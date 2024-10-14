@@ -8,7 +8,7 @@ it determines the iaddr, ilastsize, iretire for N blocks
 and outputs them in the same cycle
 */
 
-module fsm #(
+module complex_fsm #(
     localparam NRET = 2, // number of inst retired in one cycle
     localparam N = 1 // number of blocks to output in the same cycle
 )
