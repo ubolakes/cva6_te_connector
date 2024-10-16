@@ -7,7 +7,7 @@
 module multiple_retirement #(
     localparam NRET = 2,
     localparam N = 1, // max number of special inst in a cycle
-    localparam ONLY_BRANCH = 1 // at most N branches, if 0 means at most N special inst
+    localparam FIFO_DEPTH = 16 // number of entries in each FIFO
 )
 (
     input logic clk_i,
@@ -118,7 +118,7 @@ end
 /* commit ports FIFOs */
 for (genvar i = 0; i < NRET; i++) begin
     fifo_v3 #(
-        .DEPTH(16),
+        .DEPTH(FIFO_DEPTH),
         .dtype(mure_pkg::uop_entry_s)
     ) i_fifo_uop (
         .clk_i     (clk_i),
@@ -137,7 +137,7 @@ end
 
 // FIFO to store the n_blocks
 fifo_v3 #(
-    .DEPTH(16),
+    .DEPTH(FIFO_DEPTH),
     .DATA_WIDTH($clog2(N))
 ) i_nblock_fifo (
     .clk_i     (clk_i),
