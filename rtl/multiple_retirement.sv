@@ -5,9 +5,9 @@
 /* TOP LEVEL MODULE */
 
 module multiple_retirement #(
-    localparam NRET = 2,
-    localparam N = 1, // max number of special inst in a cycle
-    localparam FIFO_DEPTH = 16 // number of entries in each FIFO
+    parameter NRET = 2,
+    parameter N = 1, // max number of special inst in a cycle
+    parameter FIFO_DEPTH = 16 // number of entries in each FIFO
 )
 (
     input logic clk_i,
