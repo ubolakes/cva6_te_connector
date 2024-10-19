@@ -9,7 +9,6 @@ it produces the type of the instruction
 
 module itype_detector
 (
-    input logic                 valid_i,
     input logic                 exception_i,
     input logic                 interrupt_i,
     input mure_pkg::fu_op       op_i,

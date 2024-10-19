@@ -105,7 +105,6 @@ assign enable_demux_arb = valid_fsm;
 /* itype_detectors */
 for (genvar i = 0; i < NRET; i++) begin
     itype_detector i_itype_detector (
-        .valid_i       (commit_instr_i[i].valid),
         .exception_i   (exception_i.valid),
         .interrupt_i   (interrupt_i),
         .op_i          (commit_instr_i[i].op),
