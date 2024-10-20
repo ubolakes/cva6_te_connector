@@ -30,6 +30,7 @@ mure_pkg::state_e current_state, next_state;
 logic [mure_pkg::XLEN-1:0]      iaddr_d, iaddr_q;
 logic [mure_pkg::XLEN-1:0]      iretire_d, iretire_q;
 logic                           exception;
+logic                           interrupt;
 logic                           special_inst;
 logic                           one_cycle;
 logic                           more_cycles;
@@ -37,7 +38,8 @@ logic                           update_iaddr;
 
 /* assignments */
 assign exception = uop_entry_i.itype == 1;
-assign special_inst = uop_entry_i.itype > 1 && uop_entry_i.valid || exception;
+assign interrupt = uop_entry_i.itype == 2;
+assign special_inst = uop_entry_i.itype > 2 && uop_entry_i.valid;
 assign iretire_o = (one_cycle || more_cycles) ? iretire_d : iretire_q;
 assign iaddr_o = one_cycle ? iaddr_d : iaddr_q;
 
@@ -73,9 +75,41 @@ always_comb begin
             iretire_d = uop_entry_i.compressed ? 1 : 2;
             ilastsize_o = !uop_entry_i.compressed;
             itype_o = uop_entry_i.itype;
+            // cause and tval not necessary
+            priv_o = uop_entry_i.priv;
+            // output readable
+            valid_o = '1;
+            // read now the output
+            one_cycle = '1;
+            // remains here
+            next_state = mure_pkg::IDLE;
+        end else if (interrupt) begin
+            itype_o = uop_entry_i.itype;
+            cause_o = cause_i;
+            // checks if an inst is committed in the same cycle
+            if (uop_entry_i.valid) begin
+                // setting iretire, ilastsize, iaddr
+                iaddr_d = uop_entry_i.pc;
+                iretire_d = uop_entry_i.compressed ? 1 : 2;
+                ilastsize_o = !uop_entry_i.compressed;
+            end
+            // output readable
+            valid_o = '1;
+            // read now the output
+            one_cycle = '1;
+            // remains here
+            next_state = mure_pkg::IDLE;
+        end else if (exception) begin
+            itype_o = uop_entry_i.itype;
             cause_o = cause_i;
             tval_o = tval_i;
-            priv_o = uop_entry_i.priv;
+            // checks if an inst is committed in the same cycle
+            if (uop_entry_i.valid) begin
+                // setting iretire, ilastsize, iaddr
+                iaddr_d = uop_entry_i.pc;
+                iretire_d = uop_entry_i.compressed ? 1 : 2;
+                ilastsize_o = !uop_entry_i.compressed;
+            end
             // output readable
             valid_o = '1;
             // read now the output
@@ -94,20 +128,48 @@ always_comb begin
             // remains here
             next_state = mure_pkg::COUNT;
         end else if (special_inst) begin
-            // increases iretire
+            // set all params for output
             iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
-            // sets ilastsize
             ilastsize_o = !uop_entry_i.compressed;
-            // sets all params for output
             itype_o = uop_entry_i.itype;
-            cause_o = cause_i;
-            tval_o = tval_i;
+            // cause and tval not necessary
             priv_o = uop_entry_i.priv;
             // output readable
             valid_o = '1;
             // read now the output
             more_cycles = '1;
             // goes to IDLE
+            next_state = mure_pkg::IDLE;
+        end else if (interrupt) begin
+            itype_o = uop_entry_i.itype;
+            cause_o = cause_i;
+            // checks if an inst is committed in the same cycle
+            if (uop_entry_i.valid) begin
+                // setting iretire, ilastsize
+                iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+                ilastsize_o = !uop_entry_i.compressed;
+            end
+            // output readable
+            valid_o = '1;
+            // read now the output
+            one_cycle = '1;
+            // remains here
+            next_state = mure_pkg::IDLE;
+        end else if (exception) begin
+            itype_o = uop_entry_i.itype;
+            cause_o = cause_i;
+            tval_o = tval_i;
+            // checks if an inst is committed in the same cycle
+            if (uop_entry_i.valid) begin
+                // setting iretire, ilastsize
+                iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+                ilastsize_o = !uop_entry_i.compressed;
+            end
+            // output readable
+            valid_o = '1;
+            // read now the output
+            one_cycle = '1;
+            // remains here
             next_state = mure_pkg::IDLE;
         end else begin
             next_state = mure_pkg::COUNT;
