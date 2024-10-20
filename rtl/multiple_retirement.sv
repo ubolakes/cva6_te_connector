@@ -229,9 +229,16 @@ always_comb begin
 
     // counting the blocks to emit in one cycle
     for (int i = 0; i < NRET; i++) begin
-        if ((uop_entry_o[i].itype > 0 && uop_entry_o[i].valid) || 
-            uop_entry_o[i].itype == 2) begin
+        if ((uop_entry_o[i].itype > 2 && uop_entry_o[i].valid)) begin
             n_blocks_i += 1;
+        end else if (uop_entry_o[i].itype == 1 || uop_entry_o[i].itype == 2) begin
+            /* since the exc and int signal are connected to all itype detectors,
+               a int would require NRET blocks, but it's not true and breaks all 
+               the system downstream.
+               That's because it would store NRET blocks in the FIFO, but since 
+               the MUX allows only one uop_entry with itype == 1, the NRET blocks 
+               would never be produced, causing a deadlock. */
+            n_blocks = 1;
         end
     end
 
