@@ -217,10 +217,10 @@ always_comb begin
 
     // populating uop FIFO entries
     for (int i = 0; i < NRET; i++) begin
-        uop_entry_i[i].valid = commit_instr_i.valid;
-        uop_entry_i[i].pc = commit_instr_i.pc;
+        uop_entry_i[i].valid = commit_instr_i[i].valid;
+        uop_entry_i[i].pc = commit_instr_i[i].pc;
         uop_entry_i[i].itype = itype[i];
-        uop_entry_i[i].compressed = commit_instr_i.is_compressed;
+        uop_entry_i[i].compressed = commit_instr_i[i].is_compressed;
         uop_entry_i[i].priv = priv_i;
     end
     
