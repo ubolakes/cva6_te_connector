@@ -290,9 +290,9 @@ typedef struct packed {
 } scoreboard_entry_t;
 
 typedef struct packed {
-    logic [XLEN-1:0]    cause; // cause of exception
-    logic [XLEN-1:0]    tval; // additional information of causing exception (e.g.: instruction causing it),
-    logic               valid;
+    logic [CAUSE_LEN-1:0]   cause; // cause of exception
+    logic [XLEN-1:0]        tval; // additional information of causing exception (e.g.: instruction causing it),
+    logic                   valid;
 } exception_t;
 
 typedef struct packed {
