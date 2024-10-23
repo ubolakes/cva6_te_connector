@@ -12,9 +12,9 @@ module itype_detector
     input logic                 exception_i,
     input logic                 interrupt_i,
     input mure_pkg::fu_op       op_i,
-    input logic                 branch_taken_i
+    input logic                 branch_taken_i,
 
-    output mure_pkg::itype_e    itype_o
+    output logic [mure_pkg::ITYPE_LEN]  itype_o
 );
     
     // internal signals
@@ -38,20 +38,20 @@ module itype_detector
     // assigning the itype
     always_comb begin
         // initialization
-        itype_o = mure_pkg::STD;
+        itype_o = '0;
 
         if (exception) begin // exception
-            itype_o = mure_pkg::EXC;
+            itype_o = 1;
         end else if (interrupt) begin // interrupt
-            itype_o = mure_pkg::INT;
+            itype_o = 2;
         end else if (eret) begin // exception or interrupt return
-            itype_o = mure_pkg::ERET;
+            itype_o = 3;
         end else if (nontaken_branch) begin // nontaken branch
-            itype_o = mure_pkg::NTB;
+            itype_o = 4;
         end else if (taken_branch) begin // taken branch
-            itype_o = mure_pkg::TB;
+            itype_o = 5;
         end else if (mure_pkg::ITYPE_LEN == 3 && updiscon) begin // uninferable discontinuity
-            itype_o = mure_pkg::UIJ;
+            itype_o = 6;
         end
     end
 
