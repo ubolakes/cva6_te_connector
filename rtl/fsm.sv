@@ -33,14 +33,13 @@ logic                           exception;
 logic                           interrupt;
 logic                           special_inst;
 logic                           one_cycle;
-logic                           more_cycles;
 logic                           update_iaddr;
 
 /* assignments */
 assign exception = uop_entry_i.itype == 1;
 assign interrupt = uop_entry_i.itype == 2;
 assign special_inst = uop_entry_i.itype > 2 && uop_entry_i.valid;
-assign iretire_o = (one_cycle || more_cycles) ? iretire_d : iretire_q;
+assign iretire_o = iretire_d;
 assign iaddr_o = one_cycle ? iaddr_d : iaddr_q;
 
 // combinatorial logic for state transition
@@ -57,7 +56,6 @@ always_comb begin
     priv_o = '0;
     iaddr_d = '0;
     one_cycle = '0;
-    more_cycles = '0;
     update_iaddr = '0;
 
     case (current_state)
@@ -66,7 +64,7 @@ always_comb begin
             // sets iaddr, increases iretire
             iaddr_d = uop_entry_i.pc;
             update_iaddr = '1;
-            iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+            iretire_d = uop_entry_i.compressed ? 1 : 2;
             // goes to COUNT
             next_state = mure_pkg::COUNT;
         end else if (special_inst) begin // special inst as first inst
@@ -92,6 +90,9 @@ always_comb begin
                 iaddr_d = uop_entry_i.pc;
                 iretire_d = uop_entry_i.compressed ? 1 : 2;
                 ilastsize_o = !uop_entry_i.compressed;
+            end else begin
+                // setting iretire as the value stored
+                iretire_d = iretire_q;
             end
             // output readable
             valid_o = '1;
@@ -109,6 +110,9 @@ always_comb begin
                 iaddr_d = uop_entry_i.pc;
                 iretire_d = uop_entry_i.compressed ? 1 : 2;
                 ilastsize_o = !uop_entry_i.compressed;
+            end else begin
+                // setting iretire as the value stored
+                iretire_d = iretire_q;
             end
             // output readable
             valid_o = '1;
@@ -136,8 +140,6 @@ always_comb begin
             priv_o = uop_entry_i.priv;
             // output readable
             valid_o = '1;
-            // read now the output
-            more_cycles = '1;
             // goes to IDLE
             next_state = mure_pkg::IDLE;
         end else if (interrupt) begin
@@ -148,11 +150,12 @@ always_comb begin
                 // setting iretire, ilastsize
                 iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
                 ilastsize_o = !uop_entry_i.compressed;
+            end else begin
+                // setting iretire as the value stored
+                iretire_d = iretire_q;
             end
             // output readable
             valid_o = '1;
-            // read now the output
-            one_cycle = '1;
             // remains here
             next_state = mure_pkg::IDLE;
         end else if (exception) begin
@@ -164,11 +167,12 @@ always_comb begin
                 // setting iretire, ilastsize
                 iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
                 ilastsize_o = !uop_entry_i.compressed;
+            end else begin
+                // setting iretire as the value stored
+                iretire_d = iretire_q;
             end
             // output readable
             valid_o = '1;
-            // read now the output
-            one_cycle = '1;
             // remains here
             next_state = mure_pkg::IDLE;
         end else begin
