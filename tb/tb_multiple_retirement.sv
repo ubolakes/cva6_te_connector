@@ -45,7 +45,10 @@ module tb_multiple_retirement();
     logic [31:0] i;
 
     // DUT instantiation
-    multiple_retirement DUT(
+    multiple_retirement #(
+        .NRET(NRET),
+        .N(N)
+    ) DUT(
         .clk_i            (clk),
         .rst_ni           (reset),
         .commit_instr_i   (commit_instr_i),
