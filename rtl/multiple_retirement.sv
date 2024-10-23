@@ -44,32 +44,31 @@ module multiple_retirement #(
 // entries for the FIFOs
 mure_pkg::uop_entry_s       uop_entry_i[NRET-1:0], uop_entry_o[NRET-1:0];
 mure_pkg::uop_entry_s       uop_entry_mux;
-mure_pkg::itype_e           itype[NRET];
+logic [mure_pkg::ITYPE_LEN] itype[NRET];
 // FIFOs management
 logic                       pop; // signal to pop FIFOs
 logic                       empty[NRET]; // signal used to enable counter
 logic                       full[NRET];
 logic                       push_enable;
-logic                       at_least_one_valid;
 // mux arbiter management
 logic [$clog2(NRET)-1:0]    mux_arb_val;
 logic                       clear_mux_arb;
 logic                       enable_mux_arb;
 // demux arbiter management
-logic [$clog2(N)-1:0]       demux_arb_val;
+logic [$clog2(N):0]         demux_arb_val;
 logic                       clear_demux_arb;
 logic                       enable_demux_arb;
 // itype_detector
 logic                       is_taken_d, is_taken_q;
-// exception info
-logic [mure_pkg::CAUSE_LEN-1:0] cause_d, cause_q;
-logic [mure_pkg::XLEN-1:0]      tval_d, tval_q;
 // block counter management
 logic                           n_blocks_full;
 logic                           n_blocks_empty;
 logic [$clog2(N):0]             n_blocks_i, n_blocks_o;
 logic                           n_blocks_push;
 logic                           n_blocks_pop;
+// exception signals
+logic [mure_pkg::CAUSE_LEN-1:0] stored_cause_d, stored_cause_q;
+logic [mure_pkg::XLEN-1:0]      stored_tval_d, stored_tval_q;
 // signals to store blocks
 logic                                    valid_fsm;
 logic [N-1:0][mure_pkg::IRETIRE_LEN-1:0] iretire_q;
@@ -89,18 +88,19 @@ logic [mure_pkg::PRIV_LEN-1:0]    priv_d;
 logic [mure_pkg::XLEN-1:0]        iaddr_d;
 
 // assignments
-assign pop = mux_arb_val == NRET-1;
-assign push_enable = !full[0] && at_least_one_valid;
+assign pop =    mux_arb_val == NRET-1 ||
+                uop_entry_o[0].itype == 1 ||
+                uop_entry_o[0].itype == 2;
 assign clear_mux_arb =  mux_arb_val == NRET-1 ||
-                        itype[0] == mure_pkg::EXC ||
-                        itype[0] == mure_pkg::INT;
+                        uop_entry_o[0].itype == 1 ||
+                        uop_entry_o[0].itype == 2;
 assign enable_mux_arb = !empty[0]; // the counter goes on if FIFOs are not empty
 assign is_taken_d = resolved_branch_i.is_taken;
-assign cause_d = exception_i.cause;
-assign tval_d = exception_i.tval;
-assign n_blocks_push = !n_blocks_full;
-assign clear_demux_arb = demux_arb_val == n_blocks_o;
-assign enable_demux_arb = valid_fsm;
+assign stored_cause_d = exception_i.cause;
+assign stored_tval_d = exception_i.tval;
+assign n_blocks_push = !n_blocks_full && n_blocks_i > 0;
+assign clear_demux_arb = n_blocks_pop; // demux_arb_val+1 == n_blocks_o && n_blocks_o > 0 && |valid_o;
+assign enable_demux_arb = valid_fsm; // && n_blocks_o > 1;
 
 /* itype_detectors */
 for (genvar i = 0; i < NRET; i++) begin
@@ -137,7 +137,7 @@ end
 // FIFO to store the n_blocks
 fifo_v3 #(
     .DEPTH(FIFO_DEPTH),
-    .DATA_WIDTH($clog2(N))
+    .DATA_WIDTH($clog2(N)+1)
 ) i_nblock_fifo (
     .clk_i     (clk_i),
     .rst_ni    (rst_ni),
@@ -173,8 +173,8 @@ fsm i_fsm (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .uop_entry_i(uop_entry_mux),
-    .cause_i    (cause_q),
-    .tval_i     (tval_q),
+    .cause_i    (stored_cause_q),
+    .tval_i     (stored_tval_q),
     .valid_o    (valid_fsm),
     .iretire_o  (iretire_d),
     .ilastsize_o(ilastsize_d),
@@ -187,7 +187,7 @@ fsm i_fsm (
 
 // demux arbiter to choose register
 counter #(
-    .WIDTH($clog2(N)),
+    .WIDTH($clog2(N)+1),
     .STICKY_OVERFLOW('0)
 ) i_demux_arbiter (
     .clk_i     (clk_i),
@@ -205,15 +205,17 @@ always_comb begin
     // init
     n_blocks_i = '0;
     n_blocks_pop = '0;
-
-    // checking if at least one input is valid
-    at_least_one_valid = 0;
-    foreach(commit_instr_i[i]) begin
-        if (commit_instr_i[i].valid) begin
-            at_least_one_valid = 1;
-            break;
-        end
+    for (int i = 0; i < N; i++) begin
+        valid_o[i] = '0;
+        iretire_o[i] = '0;
+        ilastsize_o[i] = '0;
+        itype_o[i] = '0;
+        cause_o[i] = '0;
+        tval_o[i] = '0;
+        priv_o[i] = '0;
+        iaddr_o[i] = '0;
     end
+    push_enable = '0;
 
     // populating uop FIFO entries
     for (int i = 0; i < NRET; i++) begin
@@ -221,39 +223,72 @@ always_comb begin
         uop_entry_i[i].pc = commit_instr_i[i].pc;
         uop_entry_i[i].itype = itype[i];
         uop_entry_i[i].compressed = commit_instr_i[i].is_compressed;
-        uop_entry_i[i].priv = priv_i;
+        uop_entry_i[i].priv = priv_lvl_i;
     end
-    
+
+    // enabling push in input FIFOs
+    for (int i = 0; i < NRET; i++) begin
+        if ((uop_entry_i[i].itype == 1 || uop_entry_i[i].itype == 2) ||
+            ((uop_entry_i[i].itype == 0 || uop_entry_i[i].itype > 2) && 
+            uop_entry_i[i].valid)) begin
+            push_enable = 1;
+        end
+    end
+
     // assigning mux output
     uop_entry_mux = uop_entry_o[mux_arb_val];
 
     // counting the blocks to emit in one cycle
     for (int i = 0; i < NRET; i++) begin
-        if ((uop_entry_o[i].itype > 2 && uop_entry_o[i].valid)) begin
+        if ((uop_entry_i[i].itype > 2 && uop_entry_i[i].valid)) begin
             n_blocks_i += 1;
-        end else if (uop_entry_o[i].itype == 1 || uop_entry_o[i].itype == 2) begin
+        end else if (uop_entry_i[i].itype == 1 || uop_entry_i[i].itype == 2) begin
             /* since the exc and int signal are connected to all itype detectors,
                a int would require NRET blocks, but it's not true and breaks all 
                the system downstream.
                That's because it would store NRET blocks in the FIFO, but since 
                the MUX allows only one uop_entry with itype == 1, the NRET blocks 
                would never be produced, causing a deadlock. */
-            n_blocks = 1;
+            n_blocks_i = 1;
         end
     end
 
-    // checking if all blocks are stored
-    if (demux_arb_val == n_blocks_o && !n_blocks_empty) begin
-        // setting outputs
-        for (int i = 0; i < n_blocks_o) begin
+    // checking if blocks are ready to output
+    // first case: waiting for one block
+    if (n_blocks_o == 1 && valid_fsm) begin
+        valid_o[0] = '1;
+        iretire_o[0] = iretire_d;
+        ilastsize_o[0] = ilastsize_d;
+        itype_o[0] = itype_d;
+        cause_o[0] = cause_d;
+        tval_o[0] = tval_d;
+        priv_o[0] = priv_d;
+        iaddr_o[0] = iaddr_d;
+        // popping the nblocks FIFO
+        n_blocks_pop = '1;
+    end
+
+    // second case: waiting for N blocks
+    if (n_blocks_o > 1 && demux_arb_val == n_blocks_o-1 && valid_fsm) begin
+        for (int i = 0; i < n_blocks_o; i++) begin
             valid_o[i] = '1;
-            iretire_o[i] = iretire_q[i];
-            ilastsize_o[i] = ilastsize_q[i];
-            itype_o[i] = itype_q[i];
-            cause_o[i] = cause_q[i];
-            tval_o[i] = tval_q[i];
-            priv_o[i] = priv_q[i];
-            iaddr_o[i] = iaddr_q[i];
+            if (i == n_blocks_o-1) begin
+                iretire_o[i] = iretire_d;
+                ilastsize_o[i] = ilastsize_d;
+                itype_o[i] = itype_d;
+                cause_o[i] = cause_d;
+                tval_o[i] = tval_d;
+                priv_o[i] = priv_d;
+                iaddr_o[i] = iaddr_d;
+            end else begin
+                iretire_o[i] = iretire_q[i];
+                ilastsize_o[i] = ilastsize_q[i];
+                itype_o[i] = itype_q[i];
+                cause_o[i] = cause_q[i];
+                tval_o[i] = tval_q[i];
+                priv_o[i] = priv_q[i];
+                iaddr_o[i] = iaddr_q[i];
+            end
         end
         // popping the nblocks FIFO
         n_blocks_pop = '1;
@@ -263,8 +298,8 @@ end
 always_ff @( posedge clk_i, negedge rst_ni ) begin
     if (!rst_ni) begin
         is_taken_q <= '0;
-        cause_q <= '0;
-        tval_q <= '0;
+        stored_cause_q <= '0;
+        stored_tval_q <= '0;
         for (int i = 0; i < N; i++) begin
             iretire_q[i] <= '0;
             ilastsize_q[i] <= '0;
@@ -279,8 +314,8 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
             is_taken_q <= is_taken_d;
         end
         if (exception_i.valid) begin
-            cause_q <= cause_d;
-            tval_q <= tval_d;
+            stored_cause_q <= stored_cause_d;
+            stored_tval_q <= stored_tval_d;
         end
         if (valid_fsm) begin
             iretire_q[demux_arb_val] <= iretire_d;
@@ -292,8 +327,6 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
             iaddr_q[demux_arb_val] <= iaddr_d;
         end
     end
-
-
 end
 
 endmodule
