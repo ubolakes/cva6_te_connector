@@ -67,8 +67,10 @@ logic [$clog2(N):0]             n_blocks_i, n_blocks_o;
 logic                           n_blocks_push;
 logic                           n_blocks_pop;
 // exception signals
-logic [mure_pkg::CAUSE_LEN-1:0] stored_cause_d, stored_cause_q;
-logic [mure_pkg::XLEN-1:0]      stored_tval_d, stored_tval_q;
+mure_pkg::exc_info_s            exc_info_i, exc_info_o;
+logic                           exc_info_full;
+logic                           exc_info_empty;
+logic                           exc_info_pop;
 // signals to store blocks
 logic                                    valid_fsm;
 logic [N-1:0][mure_pkg::IRETIRE_LEN-1:0] iretire_q;
@@ -96,11 +98,12 @@ assign clear_mux_arb =  mux_arb_val == NRET-1 ||
                         uop_entry_o[0].itype == 2;
 assign enable_mux_arb = !empty[0]; // the counter goes on if FIFOs are not empty
 assign is_taken_d = resolved_branch_i.is_taken;
-assign stored_cause_d = exception_i.cause;
-assign stored_tval_d = exception_i.tval;
 assign n_blocks_push = !n_blocks_full && n_blocks_i > 0;
 assign clear_demux_arb = n_blocks_pop; // demux_arb_val+1 == n_blocks_o && n_blocks_o > 0 && |valid_o;
 assign enable_demux_arb = valid_fsm; // && n_blocks_o > 1;
+assign exc_info_pop = valid_o[0] && (itype_o[0] == 1 || itype_o[0] == 1) && !exc_info_empty;
+assign exc_info_i.tval = exception_i.tval;
+assign exc_info_i.cause = exception_i.cause;
 
 /* itype_detectors */
 for (genvar i = 0; i < NRET; i++) begin
@@ -137,8 +140,26 @@ end
 // FIFO to store the n_blocks
 fifo_v3 #(
     .DEPTH(FIFO_DEPTH),
-    .DATA_WIDTH($clog2(N)+1)
+    .dtype(mure_pkg::exc_info_s)
 ) i_nblock_fifo (
+    .clk_i     (clk_i),
+    .rst_ni    (rst_ni),
+    .flush_i   ('0),
+    .testmode_i('0),
+    .full_o    (exc_info_full),
+    .empty_o   (exc_info_empty),
+    .usage_o   (),
+    .data_i    (exc_info_i),
+    .push_i    (exception_i.valid && !exc_info_full),
+    .data_o    (exc_info_o),
+    .pop_i     (exc_info_pop)
+);
+
+// FIFO to store exc and int info
+fifo_v3 #(
+    .DEPTH(FIFO_DEPTH),
+    .DATA_WIDTH($clog2(N)+1)
+) i_exc_info_fifo (
     .clk_i     (clk_i),
     .rst_ni    (rst_ni),
     .flush_i   ('0),
@@ -173,8 +194,8 @@ fsm i_fsm (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
     .uop_entry_i(uop_entry_mux),
-    .cause_i    (stored_cause_q),
-    .tval_i     (stored_tval_q),
+    .cause_i    (exc_info_o.cause),
+    .tval_i     (exc_info_o.tval),
     .valid_o    (valid_fsm),
     .iretire_o  (iretire_d),
     .ilastsize_o(ilastsize_d),
@@ -298,8 +319,6 @@ end
 always_ff @( posedge clk_i, negedge rst_ni ) begin
     if (!rst_ni) begin
         is_taken_q <= '0;
-        stored_cause_q <= '0;
-        stored_tval_q <= '0;
         for (int i = 0; i < N; i++) begin
             iretire_q[i] <= '0;
             ilastsize_q[i] <= '0;
@@ -312,10 +331,6 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
     end else begin
         if (resolved_branch_i.valid) begin
             is_taken_q <= is_taken_d;
-        end
-        if (exception_i.valid) begin
-            stored_cause_q <= stored_cause_d;
-            stored_tval_q <= stored_tval_d;
         end
         if (valid_fsm) begin
             iretire_q[demux_arb_val] <= iretire_d;
