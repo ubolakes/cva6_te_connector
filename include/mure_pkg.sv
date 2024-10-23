@@ -44,6 +44,12 @@ typedef struct packed {
     logic [PRIV_LEN-1:0]    priv;
 } uop_entry_s;
 
+// struct to store exc and int infos
+typedef struct packed {
+    logic [CAUSE_LEN-1:0]   cause;
+    logic [XLEN-1:0]        tval;
+} exc_info_s;
+
 // states definition for FSM
 typedef enum logic { 
     IDLE = 0,
