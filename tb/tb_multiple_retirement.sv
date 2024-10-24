@@ -15,6 +15,7 @@ module tb_multiple_retirement();
     logic reset;
 
     // inputs
+    logic [NRET-1:0]                valid_i;
     scoreboard_entry_t [NRET-1:0]   commit_instr_i;
     bp_resolve_t                    resolved_branch_i;
     exception_t                     exception_i;
@@ -51,6 +52,7 @@ module tb_multiple_retirement();
     ) DUT(
         .clk_i            (clk),
         .rst_ni           (reset),
+        .valid_i          (valid_i),
         .commit_instr_i   (commit_instr_i),
         .resolved_branch_i(resolved_branch_i),
         .exception_i      (exception_i),
@@ -66,7 +68,7 @@ module tb_multiple_retirement();
         .iaddr_o          (iaddr_o)
     );
 
-    logic [342:0] test_vector[1000:0];
+    logic [344:0] test_vector[1000:0];
     //    length of line   # of lines
 
     initial begin // reading test vector
@@ -78,6 +80,7 @@ module tb_multiple_retirement();
 
     always @(posedge clk) begin // on posedge we get expected output
         {
+            valid_i,
             commit_instr_i,
             resolved_branch_i,
             exception_i,
