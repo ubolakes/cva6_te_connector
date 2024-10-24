@@ -102,7 +102,7 @@ assign is_taken_d = resolved_branch_i.is_taken;
 assign n_blocks_push = !n_blocks_full && n_blocks_i > 0;
 assign clear_demux_arb = n_blocks_pop; // demux_arb_val+1 == n_blocks_o && n_blocks_o > 0 && |valid_o;
 assign enable_demux_arb = valid_fsm; // && n_blocks_o > 1;
-assign exc_info_pop = valid_o[0] && (itype_o[0] == 1 || itype_o[0] == 1) && !exc_info_empty;
+assign exc_info_pop = valid_o[0] && (itype_o[0] == 1 || itype_o[0] == 2) && !exc_info_empty;
 assign exc_info_i.tval = exception_i.tval;
 assign exc_info_i.cause = exception_i.cause;
 
@@ -151,7 +151,7 @@ fifo_v3 #(
     .empty_o   (exc_info_empty),
     .usage_o   (),
     .data_i    (exc_info_i),
-    .push_i    (exception_i.valid && !exc_info_full),
+    .push_i    ((exception_i.valid || interrupt_i) && !exc_info_full),
     .data_o    (exc_info_o),
     .pop_i     (exc_info_pop)
 );
