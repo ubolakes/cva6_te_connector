@@ -29,6 +29,7 @@ module fsm (
 mure_pkg::state_e current_state, next_state;
 logic [mure_pkg::XLEN-1:0]      iaddr_d, iaddr_q;
 logic [mure_pkg::XLEN-1:0]      iretire_d, iretire_q;
+logic                           ilastsize_d, ilastsize_q;
 logic                           exception;
 logic                           interrupt;
 logic                           special_inst;
@@ -49,6 +50,7 @@ always_comb begin
     // init
     valid_o = '0;
     iretire_d = '0;
+    ilastsize_d = '0;
     ilastsize_o = '0;
     itype_o = '0;
     cause_o = '0;
@@ -65,6 +67,9 @@ always_comb begin
             iaddr_d = uop_entry_i.pc;
             update_iaddr = '1;
             iretire_d = uop_entry_i.compressed ? 1 : 2;
+            // saving ilastsize in case next cycle 
+            // there is an exc or int w/out retired inst
+            ilastsize_d = !uop_entry_i.compressed;
             // goes to COUNT
             next_state = mure_pkg::COUNT;
         end else if (special_inst) begin // special inst as first inst
@@ -91,8 +96,9 @@ always_comb begin
                 iretire_d = uop_entry_i.compressed ? 1 : 2;
                 ilastsize_o = !uop_entry_i.compressed;
             end else begin
-                // setting iretire as the value stored
+                // setting iretire and ilastsize as the values stored
                 iretire_d = iretire_q;
+                ilastsize_o = ilastsize_q;
             end
             // output readable
             valid_o = '1;
@@ -111,8 +117,9 @@ always_comb begin
                 iretire_d = uop_entry_i.compressed ? 1 : 2;
                 ilastsize_o = !uop_entry_i.compressed;
             end else begin
-                // setting iretire as the value stored
+                // setting iretire and ilastsize as the values stored
                 iretire_d = iretire_q;
+                ilastsize_o = ilastsize_q;
             end
             // output readable
             valid_o = '1;
@@ -129,6 +136,9 @@ always_comb begin
         if (uop_entry_i.itype == 0 && uop_entry_i.valid) begin // standard inst
             // increases iretire
             iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
+            // saving ilastsize in case next cycle 
+            // there is an exc or int w/out retired inst
+            ilastsize_d = !uop_entry_i.compressed;
             // remains here
             next_state = mure_pkg::COUNT;
         end else if (special_inst) begin
@@ -151,8 +161,9 @@ always_comb begin
                 iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
                 ilastsize_o = !uop_entry_i.compressed;
             end else begin
-                // setting iretire as the value stored
+                // setting iretire and ilastsize as the values stored
                 iretire_d = iretire_q;
+                ilastsize_o = ilastsize_q;
             end
             // output readable
             valid_o = '1;
@@ -168,8 +179,9 @@ always_comb begin
                 iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
                 ilastsize_o = !uop_entry_i.compressed;
             end else begin
-                // setting iretire as the value stored
+                // setting iretire and ilastsize as the values stored
                 iretire_d = iretire_q;
+                ilastsize_o = ilastsize_q;
             end
             // output readable
             valid_o = '1;
@@ -189,17 +201,20 @@ always_ff @(posedge clk_i, negedge rst_ni) begin
         current_state <= mure_pkg::IDLE;
         iaddr_q <= '0;
         iretire_q <= '0;
-    end else if (valid_o) begin
-        current_state <= next_state;
-        iretire_q <= '0;
-    end else if (update_iaddr) begin
-        current_state <= next_state; 
-        iaddr_q <= iaddr_d;
-        iretire_q <= iretire_d;
+        ilastsize_q <= '0;
     end else begin
-        current_state <= next_state;
-        iretire_q <= iretire_d;
+         if (valid_o) begin
+            iretire_q <= '0;
+        end else if (update_iaddr) begin
+            iaddr_q <= iaddr_d;
+            iretire_q <= iretire_d;
+        end else begin
+            iretire_q <= iretire_d;
+        end
+       current_state <= next_state;
+       ilastsize_q <= ilastsize_d;
     end
+
 end
 
 endmodule
