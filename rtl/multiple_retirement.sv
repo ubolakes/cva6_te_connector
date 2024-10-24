@@ -15,6 +15,7 @@ module multiple_retirement #(
 
     /* data from the CPU */
     // inputs
+    input logic [NRET-1:0]                          valid_i,
     input mure_pkg::scoreboard_entry_t [NRET-1:0]   commit_instr_i,
     input mure_pkg::bp_resolve_t                    resolved_branch_i,
     input mure_pkg::exception_t                     exception_i,
@@ -240,7 +241,7 @@ always_comb begin
 
     // populating uop FIFO entries
     for (int i = 0; i < NRET; i++) begin
-        uop_entry_i[i].valid = commit_instr_i[i].valid;
+        uop_entry_i[i].valid = valid_i[i];
         uop_entry_i[i].pc = commit_instr_i[i].pc;
         uop_entry_i[i].itype = itype[i];
         uop_entry_i[i].compressed = commit_instr_i[i].is_compressed;
