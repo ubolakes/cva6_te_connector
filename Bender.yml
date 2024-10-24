@@ -1,0 +1,22 @@
+# Package metadata. Required.
+package:
+  # The name of the package. Required.
+  name: trace_encoder
+
+  # The list of package authors and contributors. Optional.
+  # By convention, authors should be listed in the form shown below.
+  authors: ["Umberto Laghi <umberto.laghi@studio.unibo.it>"]
+
+# Freeze any dependency updates. Optional. False if omitted.
+# Useful for chip packages. Once the chip is in final tapeout mode, and
+# dependency updates would require disastrous amounts of re-verification.
+frozen: true
+
+# List of source files in this package. Optional.
+sources:
+  # Source files can be grouped:
+  - files:
+      - include/mure_pkg.sv
+      - rtl/itype_detector.sv
+      - rtl/fsm.sv
+      - rtl/multiple_retirement.sv
