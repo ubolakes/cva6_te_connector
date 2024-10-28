@@ -27,9 +27,9 @@ module tb_multiple_retirement();
     logic [N-1:0][IRETIRE_LEN-1:0]  iretire_o;
     logic [N-1:0]                   ilastsize_o;
     logic [N-1:0][ITYPE_LEN-1:0]    itype_o;
-    logic [N-1:0][CAUSE_LEN-1:0]    cause_o;
-    logic [N-1:0][XLEN-1:0]         tval_o;
-    logic [N-1:0][PRIV_LEN-1:0]     priv_o;
+    logic [CAUSE_LEN-1:0]           cause_o;
+    logic [XLEN-1:0]                tval_o;
+    logic [PRIV_LEN-1:0]            priv_o;
     logic [N-1:0][XLEN-1:0]         iaddr_o;
 
     // testing only outputs
@@ -37,9 +37,9 @@ module tb_multiple_retirement();
     logic [N-1:0][IRETIRE_LEN-1:0]  expected_iretire;
     logic [N-1:0]                   expected_ilastsize;
     logic [N-1:0][ITYPE_LEN-1:0]    expected_itype;
-    logic [N-1:0][CAUSE_LEN-1:0]    expected_cause;
-    logic [N-1:0][XLEN-1:0]         expected_tval;
-    logic [N-1:0][PRIV_LEN-1:0]     expected_priv;
+    logic [CAUSE_LEN-1:0]           expected_cause;
+    logic [XLEN-1:0]                expected_tval;
+    logic [PRIV_LEN-1:0]            expected_priv;
     logic [N-1:0][XLEN-1:0]         expected_iaddr;
 
     // iteration variable
@@ -68,7 +68,7 @@ module tb_multiple_retirement();
         .iaddr_o          (iaddr_o)
     );
 
-    logic [344:0] test_vector[1000:0];
+    logic [305:0] test_vector[1000:0];
     //    length of line   # of lines
 
     initial begin // reading test vector
