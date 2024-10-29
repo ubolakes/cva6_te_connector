@@ -79,7 +79,6 @@ logic [N-1:0]                            ilastsize_q;
 logic [N-1:0][mure_pkg::ITYPE_LEN-1:0]   itype_q;
 logic [mure_pkg::CAUSE_LEN-1:0]         cause_q;
 logic [mure_pkg::XLEN-1:0]              tval_q;
-logic [mure_pkg::PRIV_LEN-1:0]          priv_q;
 logic [N-1:0][mure_pkg::XLEN-1:0]        iaddr_q;
 
 logic [mure_pkg::IRETIRE_LEN-1:0] iretire_d;
@@ -87,7 +86,6 @@ logic                             ilastsize_d;
 logic [mure_pkg::ITYPE_LEN-1:0]   itype_d;
 logic [mure_pkg::CAUSE_LEN-1:0]   cause_d;
 logic [mure_pkg::XLEN-1:0]        tval_d;
-logic [mure_pkg::PRIV_LEN-1:0]    priv_d;
 logic [mure_pkg::XLEN-1:0]        iaddr_d;
 
 // assignments
@@ -203,7 +201,7 @@ fsm i_fsm (
     .itype_o    (itype_d),
     .cause_o    (cause_d),
     .tval_o     (tval_d),
-    .priv_o     (priv_d),
+    .priv_o     (priv_o),
     .iaddr_o    (iaddr_d)
 );
 
@@ -234,7 +232,6 @@ always_comb begin
         itype_o[i] = '0;
         cause_o = '0;
         tval_o = '0;
-        priv_o = '0;
         iaddr_o[i] = '0;
     end
     push_enable = '0;
@@ -283,7 +280,6 @@ always_comb begin
         iretire_o[0] = iretire_d;
         ilastsize_o[0] = ilastsize_d;
         itype_o[0] = itype_d;
-        priv_o = priv_d;
         iaddr_o[0] = iaddr_d;
         // setting cause and tval for exc or int
         if (itype_o[0] == 1 || itype_o[0] == 2) begin
@@ -298,8 +294,6 @@ always_comb begin
     // when more blocks are output they 
     // are not exc or int, but other disc
     if (n_blocks_o > 1 && demux_arb_val == n_blocks_o-1 && valid_fsm) begin
-        // setting priv since it's common between blocks
-        priv_o = priv_q;
         // leaving to 0 cause and tval since they are not necessary
         // setting block specific data
         for (int i = 0; i < n_blocks_o; i++) begin
@@ -330,7 +324,6 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
             itype_q[i] <= '0;
             cause_q <= '0;
             tval_q <= '0;
-            priv_q <= '0;
             iaddr_q[i] <= '0;
         end
     end else begin
@@ -343,7 +336,6 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
             itype_q[demux_arb_val] <= itype_d;
             cause_q <= cause_d;
             tval_q <= tval_d;
-            priv_q <= priv_d;
             iaddr_q[demux_arb_val] <= iaddr_d;
         end
     end
