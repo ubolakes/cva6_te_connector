@@ -95,6 +95,7 @@ always_comb begin
                 iaddr_d = uop_entry_i.pc;
                 iretire_d = uop_entry_i.compressed ? 1 : 2;
                 ilastsize_o = !uop_entry_i.compressed;
+                priv_o = uop_entry_i.priv;
             end else begin
                 // setting iretire and ilastsize as the values stored
                 iretire_d = iretire_q;
@@ -116,6 +117,7 @@ always_comb begin
                 iaddr_d = uop_entry_i.pc;
                 iretire_d = uop_entry_i.compressed ? 1 : 2;
                 ilastsize_o = !uop_entry_i.compressed;
+                priv_o = uop_entry_i.priv;
             end else begin
                 // setting iretire and ilastsize as the values stored
                 iretire_d = iretire_q;
@@ -160,6 +162,7 @@ always_comb begin
                 // setting iretire, ilastsize
                 iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
                 ilastsize_o = !uop_entry_i.compressed;
+                priv_o = uop_entry_i.priv;
             end else begin
                 // setting iretire and ilastsize as the values stored
                 iretire_d = iretire_q;
@@ -178,6 +181,7 @@ always_comb begin
                 // setting iretire, ilastsize
                 iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
                 ilastsize_o = !uop_entry_i.compressed;
+                priv_o = uop_entry_i.priv;
             end else begin
                 // setting iretire and ilastsize as the values stored
                 iretire_d = iretire_q;
