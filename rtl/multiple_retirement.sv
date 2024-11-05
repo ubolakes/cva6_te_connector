@@ -16,9 +16,18 @@ module multiple_retirement #(
     /* data from the CPU */
     // inputs
     input logic [NRET-1:0]                          valid_i,
-    input mure_pkg::scoreboard_entry_t [NRET-1:0]   commit_instr_i,
-    input mure_pkg::bp_resolve_t                    resolved_branch_i,
-    input mure_pkg::exception_t                     exception_i,
+    // necessary inputs from scoreboard_entry_t
+    input logic [NRET-1:0][mure_pkg::XLEN-1:0]      pc_i,
+    input fu_op [NRET-1:0]                          op_i,
+    input logic [NRET-1:0]                          valid_i,
+    input logic [NRET-1:0]                          is_compressed_i,
+    // necessary inputs from bp_resolve_t
+    input logic                                     branch_valid_i,
+    input logic                                     is_taken_i,
+    // necessary inputs from exception_t
+    input logic                                     ex_valid_i,
+    input logic [mure_pkg::XLEN-1:0]                tval_i,
+    input logic [mure_pkg::XLEN-1:0]                cause_i,
     input logic                                     interrupt_i, // only connected to port 0
     input logic [mure_pkg::PRIV_LEN-1:0]            priv_lvl_i,
     //input logic [mure_pkg::CTX_LEN-1:0]             context_i, // non mandatory
@@ -96,20 +105,20 @@ assign clear_mux_arb =  mux_arb_val == NRET-1 ||
                         uop_entry_o[0].itype == 1 ||
                         uop_entry_o[0].itype == 2;
 assign enable_mux_arb = !empty[0]; // the counter goes on if FIFOs are not empty
-assign is_taken_d = resolved_branch_i.is_taken;
+assign is_taken_d = is_taken_i;
 assign n_blocks_push = !n_blocks_full && n_blocks_i > 0;
 assign clear_demux_arb = n_blocks_pop; // demux_arb_val+1 == n_blocks_o && n_blocks_o > 0 && |valid_o;
 assign enable_demux_arb = valid_fsm; // && n_blocks_o > 1;
 assign exc_info_pop = valid_o[0] && (itype_o[0] == 1 || itype_o[0] == 2) && !exc_info_empty;
-assign exc_info_i.tval = exception_i.tval;
-assign exc_info_i.cause = exception_i.cause;
+assign exc_info_i.tval = tval_i;
+assign exc_info_i.cause = cause_i;
 
 /* itype_detectors */
 for (genvar i = 0; i < NRET; i++) begin
     itype_detector i_itype_detector (
-        .exception_i   (exception_i.valid),
+        .exception_i   (ex_valid_i),
         .interrupt_i   (interrupt_i),
-        .op_i          (commit_instr_i[i].op),
+        .op_i          (op_i),
         .branch_taken_i(is_taken_q),
         .itype_o       (itype[i])
     );
@@ -149,7 +158,7 @@ fifo_v3 #(
     .empty_o   (exc_info_empty),
     .usage_o   (),
     .data_i    (exc_info_i),
-    .push_i    ((exception_i.valid || interrupt_i) && !exc_info_full),
+    .push_i    ((ex_valid_i || interrupt_i) && !exc_info_full),
     .data_o    (exc_info_o),
     .pop_i     (exc_info_pop)
 );
@@ -239,9 +248,9 @@ always_comb begin
     // populating uop FIFO entries
     for (int i = 0; i < NRET; i++) begin
         uop_entry_i[i].valid = valid_i[i];
-        uop_entry_i[i].pc = commit_instr_i[i].pc;
+        uop_entry_i[i].pc = pc_i;
         uop_entry_i[i].itype = itype[i];
-        uop_entry_i[i].compressed = commit_instr_i[i].is_compressed;
+        uop_entry_i[i].compressed = is_compressed_i;
         uop_entry_i[i].priv = priv_lvl_i;
     end
 
@@ -327,7 +336,7 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
             iaddr_q[i] <= '0;
         end
     end else begin
-        if (resolved_branch_i.valid) begin
+        if (branch_valid_i) begin
             is_taken_q <= is_taken_d;
         end
         if (valid_fsm) begin
