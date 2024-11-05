@@ -56,14 +56,6 @@ typedef enum logic {
     COUNT = 1
 } state_e;
 
-typedef enum logic [2:0] {
-    NoCF   = 0,    // No control flow prediction
-    Branch = 1,  // Branch
-    Jump   = 2,    // Jump to address from immediate
-    JumpR  = 3,   // Jump to address from registers
-    Return = 4   // Return Address Prediction
-} cf_t;
-
 // structs taken from cva6
 // for testing purpose, only necessary fields are kept
   typedef enum logic [7:0] {  // basic ALU op
@@ -287,23 +279,5 @@ typedef enum logic [2:0] {
     CZERO_EQZ,
     CZERO_NEZ
   } fu_op;
-
-typedef struct packed {
-    logic [XLEN-1:0]    pc; // PC of instruction
-    fu_op               op; // operation to perform in each functional unit
-    logic               valid; // is the result valid
-    logic               is_compressed; // signals a compressed instructions
-} scoreboard_entry_t;
-
-typedef struct packed {
-    logic [CAUSE_LEN-1:0]   cause; // cause of exception
-    logic [XLEN-1:0]        tval; // additional information of causing exception (e.g.: instruction causing it),
-    logic                   valid;
-} exception_t;
-
-typedef struct packed {
-    logic   valid; // prediction with all its values is valid
-    logic   is_taken; // branch is taken
-} bp_resolve_t;
 
 endpackage
