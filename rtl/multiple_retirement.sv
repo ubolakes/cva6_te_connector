@@ -18,7 +18,7 @@ module multiple_retirement #(
     input logic [NRET-1:0]                          valid_i, // commit_ack in cva6
     // necessary inputs from scoreboard_entry_t
     input logic [NRET-1:0][mure_pkg::XLEN-1:0]      pc_i,
-    input fu_op [NRET-1:0]                          op_i,
+    input mure_pkg::fu_op [NRET-1:0]                op_i,
     input logic [NRET-1:0]                          is_compressed_i,
     // necessary inputs from bp_resolve_t
     input logic                                     branch_valid_i,
