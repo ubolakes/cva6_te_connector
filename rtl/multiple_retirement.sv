@@ -97,9 +97,10 @@ logic [mure_pkg::XLEN-1:0]        tval_d;
 logic [mure_pkg::XLEN-1:0]        iaddr_d;
 
 // assignments
-assign pop =    mux_arb_val == NRET-1 ||
+assign pop =    (mux_arb_val == NRET-1 ||
                 uop_entry_o[0].itype == 1 ||
-                uop_entry_o[0].itype == 2;
+                uop_entry_o[0].itype == 2) &&
+                !empty[0];
 assign clear_mux_arb =  mux_arb_val == NRET-1 ||
                         uop_entry_o[0].itype == 1 ||
                         uop_entry_o[0].itype == 2;
@@ -117,7 +118,7 @@ for (genvar i = 0; i < NRET; i++) begin
     itype_detector i_itype_detector (
         .exception_i   (ex_valid_i),
         .interrupt_i   (interrupt_i),
-        .op_i          (op_i),
+        .op_i          (op_i[i]),
         .branch_taken_i(is_taken_q),
         .itype_o       (itype[i])
     );
