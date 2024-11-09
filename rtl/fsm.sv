@@ -35,6 +35,7 @@ logic                           interrupt;
 logic                           special_inst;
 logic                           one_cycle;
 logic                           update_iaddr;
+logic                           update_iretire;
 
 /* assignments */
 assign exception = uop_entry_i.itype == 1;
@@ -59,6 +60,7 @@ always_comb begin
     iaddr_d = '0;
     one_cycle = '0;
     update_iaddr = '0;
+    update_iretire = '0;
 
     case (current_state)
     mure_pkg::IDLE: begin
@@ -70,12 +72,13 @@ always_comb begin
             // saving ilastsize in case next cycle 
             // there is an exc or int w/out retired inst
             ilastsize_d = !uop_entry_i.compressed;
+            // saving iretire value
+            update_iretire = '1;
             // goes to COUNT
             next_state = mure_pkg::COUNT;
         end else if (special_inst) begin // special inst as first inst
             // set all params for output
             iaddr_d = uop_entry_i.pc;
-            iretire_d = uop_entry_i.compressed ? 1 : 2;
             ilastsize_o = !uop_entry_i.compressed;
             itype_o = uop_entry_i.itype;
             // cause and tval not necessary
@@ -141,6 +144,8 @@ always_comb begin
             // saving ilastsize in case next cycle 
             // there is an exc or int w/out retired inst
             ilastsize_d = !uop_entry_i.compressed;
+            // saving iretire value
+            update_iretire = '1;
             // remains here
             next_state = mure_pkg::COUNT;
         end else if (special_inst) begin
@@ -207,16 +212,19 @@ always_ff @(posedge clk_i, negedge rst_ni) begin
         iretire_q <= '0;
         ilastsize_q <= '0;
     end else begin
-         if (valid_o) begin
+        if (valid_o) begin
             iretire_q <= '0;
-        end else if (update_iaddr) begin
+        end
+        if (update_iaddr) begin
             iaddr_q <= iaddr_d;
-            iretire_q <= iretire_d;
-        end else begin
+        end
+        if (update_iretire) begin
             iretire_q <= iretire_d;
         end
+        if (uop_entry_i.valid) begin
+           ilastsize_q <= ilastsize_d;
+        end
        current_state <= next_state;
-       ilastsize_q <= ilastsize_d;
     end
 
 end
