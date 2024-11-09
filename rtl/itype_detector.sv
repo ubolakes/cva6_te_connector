@@ -9,6 +9,7 @@ it produces the type of the instruction
 
 module itype_detector
 (
+    input logic                 valid_i,
     input logic                 exception_i,
     input logic                 interrupt_i,
     input mure_pkg::fu_op       op_i,
@@ -31,8 +32,20 @@ module itype_detector
     assign eret = ( op_i == mure_pkg::MRET || 
                     op_i == mure_pkg::SRET ||
                     op_i == mure_pkg::DRET );
-    assign nontaken_branch = op_i == mure_pkg::BRANCH && ~branch_taken_i;
-    assign taken_branch = op_i == mure_pkg::BRANCH && branch_taken_i;
+    assign nontaken_branch = (  op_i == mure_pkg::EQ ||
+                                op_i == mure_pkg::NE ||
+                                op_i == mure_pkg::LTS ||
+                                op_i == mure_pkg::GES ||
+                                op_i == mure_pkg::LTU ||
+                                op_i == mure_pkg::GEU) && 
+                                ~branch_taken_i;
+    assign taken_branch = ( op_i == mure_pkg::EQ ||
+                            op_i == mure_pkg::NE ||
+                            op_i == mure_pkg::LTS ||
+                            op_i == mure_pkg::GES ||
+                            op_i == mure_pkg::LTU ||
+                            op_i == mure_pkg::GEU) &&
+                            branch_taken_i;
     assign updiscon = op_i == mure_pkg::JALR;
 
     // assigning the itype
@@ -44,13 +57,13 @@ module itype_detector
             itype_o = 1;
         end else if (interrupt) begin // interrupt
             itype_o = 2;
-        end else if (eret) begin // exception or interrupt return
+        end else if (eret && valid_i) begin // exception or interrupt return
             itype_o = 3;
-        end else if (nontaken_branch) begin // nontaken branch
+        end else if (nontaken_branch && valid_i) begin // nontaken branch
             itype_o = 4;
-        end else if (taken_branch) begin // taken branch
+        end else if (taken_branch && valid_i) begin // taken branch
             itype_o = 5;
-        end else if (mure_pkg::ITYPE_LEN == 3 && updiscon) begin // uninferable discontinuity
+        end else if (mure_pkg::ITYPE_LEN == 3 && updiscon && valid_i) begin // uninferable discontinuity
             itype_o = 6;
         end
     end
