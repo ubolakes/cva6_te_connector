@@ -53,11 +53,11 @@ module multiple_retirement #(
 // entries for the FIFOs
 mure_pkg::uop_entry_s       uop_entry_i[NRET-1:0], uop_entry_o[NRET-1:0];
 mure_pkg::uop_entry_s       uop_entry_mux;
-logic [mure_pkg::ITYPE_LEN] itype[NRET];
+logic [mure_pkg::ITYPE_LEN-1:0] itype[NRET];
 // FIFOs management
 logic                       pop; // signal to pop FIFOs
-logic                       empty[NRET]; // signal used to enable counter
-logic                       full[NRET];
+logic                       empty[NRET-1:0]; // signal used to enable counter
+logic                       full[NRET-1:0];
 logic                       push_enable;
 // mux arbiter management
 logic [$clog2(NRET)-1:0]    mux_arb_val;
@@ -101,9 +101,10 @@ assign pop =    (mux_arb_val == NRET-1 ||
                 uop_entry_o[0].itype == 1 ||
                 uop_entry_o[0].itype == 2) &&
                 !empty[0];
-assign clear_mux_arb =  mux_arb_val == NRET-1 ||
+assign clear_mux_arb =  (mux_arb_val == NRET-1 ||
                         uop_entry_o[0].itype == 1 ||
-                        uop_entry_o[0].itype == 2;
+                        uop_entry_o[0].itype == 2) &&
+                        !empty[0];
 assign enable_mux_arb = !empty[0]; // the counter goes on if FIFOs are not empty
 assign is_taken_d = is_taken_i;
 assign n_blocks_push = !n_blocks_full && n_blocks_i > 0;
@@ -112,10 +113,12 @@ assign enable_demux_arb = valid_fsm; // && n_blocks_o > 1;
 assign exc_info_pop = valid_o[0] && (itype_o[0] == 1 || itype_o[0] == 2) && !exc_info_empty;
 assign exc_info_i.tval = tval_i;
 assign exc_info_i.cause = cause_i;
+assign uop_entry_mux = empty[0] ? '0 : uop_entry_o[mux_arb_val];
 
 /* itype_detectors */
 for (genvar i = 0; i < NRET; i++) begin
     itype_detector i_itype_detector (
+        .valid_i       (valid_i[i]),
         .exception_i   (ex_valid_i),
         .interrupt_i   (interrupt_i),
         .op_i          (op_i[i]),
@@ -235,6 +238,7 @@ always_comb begin
     n_blocks_i = '0;
     n_blocks_pop = '0;
     for (int i = 0; i < N; i++) begin
+        // output
         valid_o[i] = '0;
         iretire_o[i] = '0;
         ilastsize_o[i] = '0;
@@ -242,15 +246,21 @@ always_comb begin
         cause_o = '0;
         tval_o = '0;
         iaddr_o[i] = '0;
+        // uop_entry
+        uop_entry_i[i].valid = '0;
+        uop_entry_i[i].pc = '0;
+        uop_entry_i[i].itype = '0;
+        uop_entry_i[i].compressed = '0;
+        uop_entry_i[i].priv = '0;
     end
     push_enable = '0;
 
     // populating uop FIFO entries
     for (int i = 0; i < NRET; i++) begin
         uop_entry_i[i].valid = valid_i[i];
-        uop_entry_i[i].pc = pc_i;
+        uop_entry_i[i].pc = pc_i[i];
         uop_entry_i[i].itype = itype[i];
-        uop_entry_i[i].compressed = is_compressed_i;
+        uop_entry_i[i].compressed = is_compressed_i[i];
         uop_entry_i[i].priv = priv_lvl_i;
     end
 
@@ -262,9 +272,6 @@ always_comb begin
             push_enable = 1;
         end
     end
-
-    // assigning mux output
-    uop_entry_mux = uop_entry_o[mux_arb_val];
 
     // counting the blocks to emit in one cycle
     for (int i = 0; i < NRET; i++) begin
@@ -284,7 +291,7 @@ always_comb begin
     // checking if blocks are ready to output
     // first case: waiting for one block
     // when it outputs one block can be exc or int
-    if (n_blocks_o == 1 && valid_fsm) begin
+    if (n_blocks_o == 1 && valid_fsm && !n_blocks_empty) begin
         valid_o[0] = '1;
         iretire_o[0] = iretire_d;
         ilastsize_o[0] = ilastsize_d;
@@ -302,7 +309,7 @@ always_comb begin
     // second case: waiting for N blocks
     // when more blocks are output they 
     // are not exc or int, but other disc
-    if (n_blocks_o > 1 && demux_arb_val == n_blocks_o-1 && valid_fsm) begin
+    if (n_blocks_o > 1 && demux_arb_val == n_blocks_o-1 && valid_fsm && n_blocks_empty) begin
         // leaving to 0 cause and tval since they are not necessary
         // setting block specific data
         for (int i = 0; i < n_blocks_o; i++) begin
