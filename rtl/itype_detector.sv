@@ -15,7 +15,7 @@ module itype_detector
     input mure_pkg::fu_op       op_i,
     input logic                 branch_taken_i,
 
-    output logic [mure_pkg::ITYPE_LEN]  itype_o
+    output logic [mure_pkg::ITYPE_LEN-1:0]  itype_o
 );
     
     // internal signals
