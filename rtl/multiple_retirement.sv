@@ -27,7 +27,6 @@ module multiple_retirement #(
     input logic                                     ex_valid_i,
     input logic [mure_pkg::XLEN-1:0]                tval_i,
     input logic [mure_pkg::XLEN-1:0]                cause_i,
-    input logic                                     interrupt_i, // only connected to port 0
     input logic [mure_pkg::PRIV_LEN-1:0]            priv_lvl_i,
     //input logic [mure_pkg::CTX_LEN-1:0]             context_i, // non mandatory
     //input logic [mure_pkg::TIME_LEN-1:0]            time_i, // non mandatory
@@ -69,6 +68,7 @@ logic                       clear_demux_arb;
 logic                       enable_demux_arb;
 // itype_detector
 logic                       is_taken_d, is_taken_q;
+logic                       interrupt;
 // block counter management
 logic                           n_blocks_full;
 logic                           n_blocks_empty;
@@ -114,13 +114,14 @@ assign exc_info_pop = valid_o[0] && (itype_o[0] == 1 || itype_o[0] == 2) && !exc
 assign exc_info_i.tval = tval_i;
 assign exc_info_i.cause = cause_i;
 assign uop_entry_mux = empty[0] ? '0 : uop_entry_o[mux_arb_val];
+assign interrupt = cause_i[mure_pkg::XLEN-1]; // determinated based on the MSB of cause
 
 /* itype_detectors */
 for (genvar i = 0; i < NRET; i++) begin
     itype_detector i_itype_detector (
         .valid_i       (valid_i[i]),
         .exception_i   (ex_valid_i),
-        .interrupt_i   (interrupt_i),
+        .interrupt_i   (interrupt),
         .op_i          (op_i[i]),
         .branch_taken_i(is_taken_q),
         .itype_o       (itype[i])
@@ -161,7 +162,7 @@ fifo_v3 #(
     .empty_o   (exc_info_empty),
     .usage_o   (),
     .data_i    (exc_info_i),
-    .push_i    ((ex_valid_i || interrupt_i) && !exc_info_full),
+    .push_i    ((ex_valid_i || interrupt) && !exc_info_full),
     .data_o    (exc_info_o),
     .pop_i     (exc_info_pop)
 );
