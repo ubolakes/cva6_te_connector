@@ -59,7 +59,7 @@ module multiple_retirement #(
 
 // defining signals for the rest of the pipeline
 logic [NRET-1:0][mure_pkg::XLEN-1:0]    pc;
-mure_pkg::fu_op [NRET-1:0]              op;
+fu_op [NRET-1:0]                        op;
 logic [NRET-1:0]                        is_compressed;
 logic                                   branch_valid;
 logic                                   is_taken;
@@ -86,50 +86,50 @@ always_comb begin
 end
 
 // entries for the FIFOs
-mure_pkg::uop_entry_s       uop_entry_i[NRET-1:0], uop_entry_o[NRET-1:0];
-mure_pkg::uop_entry_s       uop_entry_mux;
-logic [mure_pkg::ITYPE_LEN-1:0] itype[NRET];
+mure_pkg::uop_entry_s                       uop_entry_i[NRET-1:0], uop_entry_o[NRET-1:0];
+mure_pkg::uop_entry_s                       uop_entry_mux;
+logic [mure_pkg::ITYPE_LEN-1:0]             itype[NRET];
 // FIFOs management
-logic                       pop; // signal to pop FIFOs
-logic                       empty[NRET-1:0]; // signal used to enable counter
-logic                       full[NRET-1:0];
-logic                       push_enable;
+logic                                       pop; // signal to pop FIFOs
+logic                                       empty[NRET-1:0]; // signal used to enable counter
+logic                                       full[NRET-1:0];
+logic                                       push_enable;
 // mux arbiter management
-logic [$clog2(NRET)-1:0]    mux_arb_val;
-logic                       clear_mux_arb;
-logic                       enable_mux_arb;
+logic [$clog2(NRET)-1:0]                    mux_arb_val;
+logic                                       clear_mux_arb;
+logic                                       enable_mux_arb;
 // demux arbiter management
-logic [$clog2(N):0]         demux_arb_val;
-logic                       clear_demux_arb;
-logic                       enable_demux_arb;
+logic [$clog2(N):0]                         demux_arb_val;
+logic                                       clear_demux_arb;
+logic                                       enable_demux_arb;
 // itype_detector
-logic                       is_taken_d, is_taken_q;
+logic                                       is_taken_d, is_taken_q;
 // block counter management
-logic                           n_blocks_full;
-logic                           n_blocks_empty;
-logic [$clog2(N):0]             n_blocks_i, n_blocks_o;
-logic                           n_blocks_push;
-logic                           n_blocks_pop;
+logic                                       n_blocks_full;
+logic                                       n_blocks_empty;
+logic [$clog2(N):0]                         n_blocks_i, n_blocks_o;
+logic                                       n_blocks_push;
+logic                                       n_blocks_pop;
 // exception signals
-mure_pkg::exc_info_s            exc_info_i, exc_info_o;
-logic                           exc_info_full;
-logic                           exc_info_empty;
-logic                           exc_info_pop;
+mure_pkg::exc_info_s                        exc_info_i, exc_info_o;
+logic                                       exc_info_full;
+logic                                       exc_info_empty;
+logic                                       exc_info_pop;
 // signals to store blocks
-logic                                    valid_fsm;
-logic [N-1:0][mure_pkg::IRETIRE_LEN-1:0] iretire_q;
-logic [N-1:0]                            ilastsize_q;
-logic [N-1:0][mure_pkg::ITYPE_LEN-1:0]   itype_q;
-logic [mure_pkg::CAUSE_LEN-1:0]         cause_q;
-logic [mure_pkg::XLEN-1:0]              tval_q;
-logic [N-1:0][mure_pkg::XLEN-1:0]        iaddr_q;
+logic                                       valid_fsm;
+logic [N-1:0][mure_pkg::IRETIRE_LEN-1:0]    iretire_q;
+logic [N-1:0]                               ilastsize_q;
+logic [N-1:0][mure_pkg::ITYPE_LEN-1:0]      itype_q;
+logic [mure_pkg::CAUSE_LEN-1:0]             cause_q;
+logic [mure_pkg::XLEN-1:0]                  tval_q;
+logic [N-1:0][mure_pkg::XLEN-1:0]           iaddr_q;
 
-logic [mure_pkg::IRETIRE_LEN-1:0] iretire_d;
-logic                             ilastsize_d;
-logic [mure_pkg::ITYPE_LEN-1:0]   itype_d;
-logic [mure_pkg::CAUSE_LEN-1:0]   cause_d;
-logic [mure_pkg::XLEN-1:0]        tval_d;
-logic [mure_pkg::XLEN-1:0]        iaddr_d;
+logic [mure_pkg::IRETIRE_LEN-1:0]           iretire_d;
+logic                                       ilastsize_d;
+logic [mure_pkg::ITYPE_LEN-1:0]             itype_d;
+logic [mure_pkg::CAUSE_LEN-1:0]             cause_d;
+logic [mure_pkg::XLEN-1:0]                  tval_d;
+logic [mure_pkg::XLEN-1:0]                  iaddr_d;
 
 // assignments
 assign pop =    (mux_arb_val == NRET-1 ||

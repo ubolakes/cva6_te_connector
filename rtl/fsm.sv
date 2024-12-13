@@ -26,7 +26,7 @@ module fsm (
 );
 
 /* internal signals */
-mure_pkg::state_e current_state, next_state;
+mure_pkg::state_e               current_state, next_state;
 logic [mure_pkg::XLEN-1:0]      iaddr_d, iaddr_q;
 logic [mure_pkg::XLEN-1:0]      iretire_d, iretire_q;
 logic                           ilastsize_d, ilastsize_q;

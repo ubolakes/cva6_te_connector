@@ -9,11 +9,11 @@ it produces the type of the instruction
 
 module itype_detector
 (
-    input logic                 valid_i,
-    input logic                 exception_i,
-    input logic                 interrupt_i,
-    input mure_pkg::fu_op       op_i,
-    input logic                 branch_taken_i,
+    input logic                             valid_i,
+    input logic                             exception_i,
+    input logic                             interrupt_i,
+    input fu_op                             op_i,
+    input logic                             branch_taken_i,
 
     output logic [mure_pkg::ITYPE_LEN-1:0]  itype_o
 );
