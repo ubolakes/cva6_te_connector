@@ -10,24 +10,31 @@ module multiple_retirement #(
     parameter FIFO_DEPTH = 16 // number of entries in each FIFO
 )
 (
-    input logic clk_i,
-    input logic rst_ni,
+    input logic                                     clk_i,
+    input logic                                     rst_ni,
 
     /* data from the CPU */
     // inputs
-    input logic [NRET-1:0]                          valid_i, // commit_ack in cva6
-    // necessary inputs from scoreboard_entry_t
-    input logic [NRET-1:0][mure_pkg::XLEN-1:0]      pc_i,
-    input mure_pkg::fu_op [NRET-1:0]                op_i,
-    input logic [NRET-1:0]                          is_compressed_i,
-    // necessary inputs from bp_resolve_t
-    input logic                                     branch_valid_i,
-    input logic                                     is_taken_i,
-    // necessary inputs from exception_t
-    input logic                                     ex_valid_i,
-    input logic [mure_pkg::XLEN-1:0]                tval_i,
-    input logic [mure_pkg::XLEN-1:0]                cause_i,
-    input logic                                     interrupt_i, // only connected to port 0
+    input logic [NRET-1:0]                          valid_i, // commit_ack from cva6
+    /* necessary inputs from scoreboard_entry_t:
+     - pc
+     - op
+     - is_compressed
+    */
+    input scoreboard_entry_t [NRET-1:0]             commit_instr_i,
+    /* necessary inputs from bp_resolve_t:
+     - branch_valid
+     - is_taken
+    */
+    input bp_resolve_t                              resolved_branch_i,
+    /* necessary inputs from exception_t: (comprehends interrupts)
+     - ex_valid
+     - tval
+     - cause
+     - interrupt
+    */
+    input exception_t                               ex_commit_i,
+    // from other signals
     input logic [mure_pkg::PRIV_LEN-1:0]            priv_lvl_i,
     //input logic [mure_pkg::CTX_LEN-1:0]             context_i, // non mandatory
     //input logic [mure_pkg::TIME_LEN-1:0]            time_i, // non mandatory
@@ -49,6 +56,34 @@ module multiple_retirement #(
     //output logic [mure_pkg::CTYPE_LEN-1:0]          ctype_o, // non mandatory
     //output logic [mure_pkg::SIJ_LEN-1]              sijump_o // non mandatory
 );
+
+// defining signals for the rest of the pipeline
+logic [NRET-1:0][mure_pkg::XLEN-1:0]    pc;
+mure_pkg::fu_op [NRET-1:0]              op;
+logic [NRET-1:0]                        is_compressed;
+logic                                   branch_valid;
+logic                                   is_taken;
+logic                                   ex_valid;
+logic [mure_pkg::XLEN-1:0]              tval;
+logic [mure_pkg::XLEN-1:0]              cause;
+logic                                   interrupt;
+
+// assignment
+always_comb begin
+    for (int i = 0; i < NRET; i++) begin
+        pc[i] = commit_instr_i[i].pc;
+        op[i] = commit_instr_i[i].op;
+        is_compressed[i] = commit_instr_i[i].is_compressed;
+    end
+
+    branch_valid = resolved_branch_i.valid;
+    is_taken = resolved_branch_i.is_taken;
+    ex_valid = ex_commit_i.valid;
+    tval = ex_commit_i.tval;
+    cause = ex_commit_i.cause;
+    // the interrupt is determined based on the MSB of cause
+    interrupt = cause[mure_pkg::XLEN-1];
+end
 
 // entries for the FIFOs
 mure_pkg::uop_entry_s       uop_entry_i[NRET-1:0], uop_entry_o[NRET-1:0];
@@ -111,17 +146,17 @@ assign n_blocks_push = !n_blocks_full && n_blocks_i > 0;
 assign clear_demux_arb = n_blocks_pop; // demux_arb_val+1 == n_blocks_o && n_blocks_o > 0 && |valid_o;
 assign enable_demux_arb = valid_fsm; // && n_blocks_o > 1;
 assign exc_info_pop = valid_o[0] && (itype_o[0] == 1 || itype_o[0] == 2) && !exc_info_empty;
-assign exc_info_i.tval = tval_i;
-assign exc_info_i.cause = cause_i;
+assign exc_info_i.tval = tval;
+assign exc_info_i.cause = cause;
 assign uop_entry_mux = empty[0] ? '0 : uop_entry_o[mux_arb_val];
 
 /* itype_detectors */
 for (genvar i = 0; i < NRET; i++) begin
     itype_detector i_itype_detector (
         .valid_i       (valid_i[i]),
-        .exception_i   (ex_valid_i),
-        .interrupt_i   (interrupt_i),
-        .op_i          (op_i[i]),
+        .exception_i   (ex_valid),
+        .interrupt_i   (interrupt),
+        .op_i          (op[i]),
         .branch_taken_i(is_taken_q),
         .itype_o       (itype[i])
     );
@@ -161,7 +196,7 @@ fifo_v3 #(
     .empty_o   (exc_info_empty),
     .usage_o   (),
     .data_i    (exc_info_i),
-    .push_i    ((ex_valid_i || interrupt_i) && !exc_info_full),
+    .push_i    ((ex_valid || interrupt) && !exc_info_full),
     .data_o    (exc_info_o),
     .pop_i     (exc_info_pop)
 );
@@ -258,9 +293,9 @@ always_comb begin
     // populating uop FIFO entries
     for (int i = 0; i < NRET; i++) begin
         uop_entry_i[i].valid = valid_i[i];
-        uop_entry_i[i].pc = pc_i[i];
+        uop_entry_i[i].pc = pc[i];
         uop_entry_i[i].itype = itype[i];
-        uop_entry_i[i].compressed = is_compressed_i[i];
+        uop_entry_i[i].compressed = is_compressed[i];
         uop_entry_i[i].priv = priv_lvl_i;
     end
 
