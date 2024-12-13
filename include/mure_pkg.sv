@@ -8,11 +8,7 @@ package mure_pkg;
     localparam INST_LEN = 32;
     localparam ITYPE_LEN = 3;
     localparam IRETIRE_LEN = 32;
-`ifdef TRDB_ARCH64 // 64bit arch specific parameters
     localparam XLEN = 64;
-`else // 32bit arch
-    localparam XLEN = 32;
-`endif
 
 // struct to save all itypes
 // refer to page 21 of the spec
@@ -57,8 +53,16 @@ typedef enum logic {
 } state_e;
 
 // structs taken from cva6
-// for testing purpose, only necessary fields are kept
-  typedef enum logic [7:0] {  // basic ALU op
+// are they necessary if integrated in cva6?
+/*
+// localparams necessary
+localparam GPLEN = 41;
+localparam REG_ADDR_SIZE = 5;
+localparam TRANS_ID_BITS = $clog2(??);
+
+// operation performed
+typedef enum logic [7:0] {
+    // basic ALU op
     ADD,
     SUB,
     ADDW,
@@ -278,6 +282,55 @@ typedef enum logic {
     // Zicond instruction
     CZERO_EQZ,
     CZERO_NEZ
-  } fu_op;
+} fu_op;
+
+// functional unit used
+typedef enum logic [3:0] {
+    NONE,       // 0
+    LOAD,       // 1
+    STORE,      // 2
+    ALU,        // 3
+    CTRL_FLOW,  // 4
+    MULT,       // 5
+    CSR,        // 6
+    FPU,        // 7
+    FPU_VEC,    // 8
+    CVXIF,      // 9
+    ACCEL       // 10
+} fu_t;
+
+// excetion committed
+typedef struct packed {
+    logic [XLEN-1:0]    cause;
+    logic [XLEN-1:0]    tval;
+    logic [GPLEN-1:0]   tval2;  
+    logic [31:0]        tinst;
+    logic               gva; 
+    logic               valid;
+} exception_t;
+
+// instruction committed
+typedef struct packed {
+    logic [XLEN-1:0]            pc;
+    logic [TRANS_ID_BITS-1:0]   trans_id;
+    fu_t                        fu;
+    fu_op                       op;
+    logic [REG_ADDR_SIZE-1:0]   rs1;
+    logic [REG_ADDR_SIZE-1:0]   rs2;
+    logic [REG_ADDR_SIZE-1:0]   rd;
+    logic [XLEN-1:0]            result;
+    logic                       valid;
+    logic                       use_imm;
+    logic                       use_zimm;
+    logic                       use_pc;
+    exception_t                 ex; // add
+    branchpredict_sbe_t         bp; // add
+    logic                       is_compressed;
+    logic                       is_macro_instr;
+    logic                       is_last_macro_instr;
+    logic                       is_double_rd_macro_instr;
+    logic                       vfp;
+} scoreboard_entry_t;
+*/
 
 endpackage
