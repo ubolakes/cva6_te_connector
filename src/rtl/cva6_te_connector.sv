@@ -4,7 +4,7 @@
 
 /* TOP LEVEL MODULE */
 
-module multiple_retirement #(
+module cva6_te_connector #(
     parameter NRET = 2,
     parameter N = 1, // max number of special inst in a cycle
     parameter FIFO_DEPTH = 16 // number of entries in each FIFO

@@ -19,4 +19,4 @@ sources:
       - src/include/mure_pkg.sv
       - src/rtl/itype_detector.sv
       - src/rtl/fsm.sv
-      - src/rtl/multiple_retirement.sv
+      - src/rtl/cva6_te_connector.sv

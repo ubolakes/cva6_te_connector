@@ -9,7 +9,7 @@ import mure_pkg::*;
 localparam NRET = 2;
 localparam N = 2;
 
-module tb_multiple_retirement();
+module tb_cva6_te_connector();
 
     logic clk;
     logic reset;
@@ -46,7 +46,7 @@ module tb_multiple_retirement();
     logic [31:0] i;
 
     // DUT instantiation
-    multiple_retirement #(
+    cva6_te_connector #(
         .NRET(NRET),
         .N(N)
     ) DUT(
@@ -72,7 +72,7 @@ module tb_multiple_retirement();
     //    length of line   # of lines
 
     initial begin // reading test vector
-        $readmemb("tv_multiple_retirement", test_vector);
+        $readmemb("tv_cva6_te_connector", test_vector);
         i = 0;
         reset = 0; #10;
         reset = 1;            
