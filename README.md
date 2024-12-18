@@ -1,8 +1,5 @@
 # CVA6 Trace Encoder Connector
 
-Since the CVA6 core does not produce the required signals for the Trace Encoder, a specific interface is required to make the two communicate.
-The module that makes the core and the Trace Encoder communicate is the *cva6_te_connector*.
-
 According to the *E-Trace specification*, the mandatory inputs the *Trace Encoder* takes in are the following:
 
 - *itype*, the termination type, so what the last instruction is;
@@ -11,7 +8,7 @@ According to the *E-Trace specification*, the mandatory inputs the *Trace Encode
 - *priv*, privilege level for all instructions retired in the block;
 - *iaddr*, the address of the first instruction in the block;
 - *iretire*, the length of the instructions retired in the block expressed in halfwords;
-- *ilastsize*, the size of the last retired instruction expressed in \( 2^{ilastsize}\) halfwords
+- *ilastsize*, the size of the last retired instruction expressed in $2^{ilastsize}$ halfwords
 
 No RISC-V CPU generates the aforementioned signals, necessitating an *interface module* that converts these CPU signals into a format comprehensible by the TE.
 
@@ -21,8 +18,8 @@ The module that has been implemented is studied specifically for the CVA6 CPU; h
 
 This module captures the instructions executed by the core, along with exceptions and interrupts, and generates the necessary inputs for the TE.
 
-<p align="center" style="background-color: white; padding: 10px;">
-    <img src="doc/img/arch_with_connector.png" alt="Whole system architecture including cva6_te_connector">
+<p align="center" style="background-color: white; padding: 10px">
+    <img src="doc/img/arch_with_connector.jpg" alt="Whole system architecture including cva6_te_connector">
 </p>
 
 *Figure: Whole system architecture including cva6_te_connector*
@@ -51,7 +48,7 @@ CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V
 
 The architecture is the following:  
 
-<p align="center">
+<p align="center" style="background-color: white; padding: 10px;">
   <img src="doc/img/cva6.png" alt="CVA6 internal architecture">
 </p>
 
@@ -68,7 +65,7 @@ As we'll see in the next portion of the document, these signals are necessary to
 On a high level, this module takes the instructions committed by the CPU and stores them inside FIFOs. Then, these instructions are fed into an *FSM* that computes the parameters for each block and then outputs them.
 
 <p align="center" style="background-color: white; padding: 10px;">
-  <img src="doc/img/cva6_te_connector.png" alt="cva6_te_connector internal architecture">
+  <img src="doc/img/cva6_te_connector.jpg" alt="cva6_te_connector internal architecture">
 </p>
 
 *Figure: cva6_te_connector internal architecture*
@@ -78,7 +75,7 @@ On a high level, this module takes the instructions committed by the CPU and sto
 A fundamental part of the design is the `itype_detector`, whose objective is to determine the `itype` of the instruction. This is done by checking the operation associated with a committed instruction and checking if an exception or interrupt occurs in the same cycle. The branch-associated inputs are stored in a register because, in CVA6 simulated waveforms, these signals were asserted N cycles before the instruction commitment.
 
 <p align="center" style="background-color: white; padding: 10px;">
-  <img src="doc/img/itype_detector.png" alt="itype_detector associated logic">
+  <img src="doc/img/itype_detector.jpg" alt="itype_detector associated logic">
 </p>
 
 *Figure: itype_detector associated logic*
@@ -96,7 +93,7 @@ Then, instructions need to be fed inside the FSM that determines the block field
 If an exception or interrupt is encountered, the counter outputs only the first FIFO to prevent sending multiple exception or interrupt `itype`s to the FSM. This behavior is caused by exception and interrupt signals being connected to all `itype_detector`s.
 
 <p align="center" style="background-color: white; padding: 10px;">
-  <img src="doc/img/serialization.png" alt="Serialization logic">
+  <img src="doc/img/serialization.jpg" alt="Serialization logic">
 </p>
 
 *Figure: Serialization logic*
@@ -111,7 +108,7 @@ The FSM has two states:
 - *count*, where the final parameters are set.
 
 <p align="center" style="background-color: white; padding: 10px;">
-  <img src="doc/img/fsm.png" alt="FSM states chart">
+  <img src="doc/img/fsm.jpg" alt="FSM states chart">
 </p>
 
 *Figure: FSM states chart*
@@ -139,7 +136,7 @@ In both states, the `cause` and `tval` fields are populated only if there’s an
 Since up to N blocks can be output per cycle, the `cva6_te_connector` module parallelizes the blocks produced by the FSM. A demultiplexer operated by a counter stores each block emitted by the FSM inside a register.
 
 <p align="center" style="background-color: white; padding: 10px;">
-  <img src="doc/img/deserialization.png" alt="Deserialization logic">
+  <img src="doc/img/deserialization.jpg" alt="Deserialization logic">
 </p>
 
 *Figure: Deserialization logic*
