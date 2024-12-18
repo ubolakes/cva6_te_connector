@@ -16,7 +16,7 @@ frozen: true
 sources:
   # Source files can be grouped:
   - files:
-      - include/mure_pkg.sv
-      - rtl/itype_detector.sv
-      - rtl/fsm.sv
-      - rtl/multiple_retirement.sv
+      - src/include/mure_pkg.sv
+      - src/rtl/itype_detector.sv
+      - src/rtl/fsm.sv
+      - src/rtl/multiple_retirement.sv
