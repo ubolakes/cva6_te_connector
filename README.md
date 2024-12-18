@@ -21,7 +21,7 @@ The module that has been implemented is studied specifically for the CVA6 CPU; h
 
 This module captures the instructions executed by the core, along with exceptions and interrupts, and generates the necessary inputs for the TE.
 
-<p align="center">
+<p align="center" style="background-color: white; padding: 10px;">
     <img src="doc/img/arch_with_connector.png" alt="Whole system architecture including cva6_te_connector">
 </p>
 
@@ -67,7 +67,7 @@ As we'll see in the next portion of the document, these signals are necessary to
 
 On a high level, this module takes the instructions committed by the CPU and stores them inside FIFOs. Then, these instructions are fed into an *FSM* that computes the parameters for each block and then outputs them.
 
-<p align="center">
+<p align="center" style="background-color: white; padding: 10px;">
   <img src="doc/img/cva6_te_connector.png" alt="cva6_te_connector internal architecture">
 </p>
 
@@ -77,7 +77,7 @@ On a high level, this module takes the instructions committed by the CPU and sto
 
 A fundamental part of the design is the `itype_detector`, whose objective is to determine the `itype` of the instruction. This is done by checking the operation associated with a committed instruction and checking if an exception or interrupt occurs in the same cycle. The branch-associated inputs are stored in a register because, in CVA6 simulated waveforms, these signals were asserted N cycles before the instruction commitment.
 
-<p align="center">
+<p align="center" style="background-color: white; padding: 10px;">
   <img src="doc/img/itype_detector.png" alt="itype_detector associated logic">
 </p>
 
@@ -95,7 +95,7 @@ Then, instructions need to be fed inside the FSM that determines the block field
 
 If an exception or interrupt is encountered, the counter outputs only the first FIFO to prevent sending multiple exception or interrupt `itype`s to the FSM. This behavior is caused by exception and interrupt signals being connected to all `itype_detector`s.
 
-<p align="center">
+<p align="center" style="background-color: white; padding: 10px;">
   <img src="doc/img/serialization.png" alt="Serialization logic">
 </p>
 
@@ -110,7 +110,7 @@ The FSM has two states:
 - *idle*, where the starting values are set;
 - *count*, where the final parameters are set.
 
-<p align="center">
+<p align="center" style="background-color: white; padding: 10px;">
   <img src="doc/img/fsm.png" alt="FSM states chart">
 </p>
 
@@ -138,7 +138,7 @@ In both states, the `cause` and `tval` fields are populated only if there’s an
 
 Since up to N blocks can be output per cycle, the `cva6_te_connector` module parallelizes the blocks produced by the FSM. A demultiplexer operated by a counter stores each block emitted by the FSM inside a register.
 
-<p align="center">
+<p align="center" style="background-color: white; padding: 10px;">
   <img src="doc/img/deserialization.png" alt="Deserialization logic">
 </p>
 
