@@ -2,7 +2,7 @@
 // Contact: umberto.laghi@studio.unibo.it
 // Github:  @ubolakes
 
-package mure_pkg;
+package connector_pkg;
     localparam CAUSE_LEN = 5;
     localparam PRIV_LEN = 2; // depends on CPU implementation
     localparam INST_LEN = 32;

@@ -4,7 +4,7 @@
 
 `timescale 1ns/1ns
 
-import mure_pkg::*;
+import connector_pkg::*;
 
 module tb_itype_detector_alt();
 

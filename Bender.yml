@@ -16,7 +16,7 @@ frozen: true
 sources:
   # Source files can be grouped:
   - files:
-      - src/include/mure_pkg.sv
+      - src/include/connector_pkg.sv
       - src/rtl/itype_detector.sv
       - src/rtl/fsm.sv
       - src/rtl/cva6_te_connector.sv

@@ -8,27 +8,27 @@ it determines the iaddr, ilastsize, iretire
 */
 
 module fsm (
-    input logic                                 clk_i,
-    input logic                                 rst_ni,
+    input logic                                     clk_i,
+    input logic                                     rst_ni,
 
-    input mure_pkg::uop_entry_s                 uop_entry_i,
-    input logic [mure_pkg::CAUSE_LEN-1:0]       cause_i,
-    input logic [mure_pkg::XLEN-1:0]            tval_i,
+    input connector_pkg::uop_entry_s                uop_entry_i,
+    input logic [connector_pkg::CAUSE_LEN-1:0]      cause_i,
+    input logic [connector_pkg::XLEN-1:0]           tval_i,
 
-    output logic                                valid_o,
-    output logic [mure_pkg::IRETIRE_LEN-1:0]    iretire_o,
-    output logic                                ilastsize_o,
-    output logic [mure_pkg::ITYPE_LEN-1:0]      itype_o,
-    output logic [mure_pkg::CAUSE_LEN-1:0]      cause_o,
-    output logic [mure_pkg::XLEN-1:0]           tval_o,
-    output logic [mure_pkg::PRIV_LEN-1:0]       priv_o,
-    output logic [mure_pkg::XLEN-1:0]           iaddr_o
+    output logic                                    valid_o,
+    output logic [connector_pkg::IRETIRE_LEN-1:0]   iretire_o,
+    output logic                                    ilastsize_o,
+    output logic [connector_pkg::ITYPE_LEN-1:0]     itype_o,
+    output logic [connector_pkg::CAUSE_LEN-1:0]     cause_o,
+    output logic [connector_pkg::XLEN-1:0]          tval_o,
+    output logic [connector_pkg::PRIV_LEN-1:0]      priv_o,
+    output logic [connector_pkg::XLEN-1:0]          iaddr_o
 );
 
 /* internal signals */
-mure_pkg::state_e               current_state, next_state;
-logic [mure_pkg::XLEN-1:0]      iaddr_d, iaddr_q;
-logic [mure_pkg::XLEN-1:0]      iretire_d, iretire_q;
+connector_pkg::state_e          current_state, next_state;
+logic [connector_pkg::XLEN-1:0] iaddr_d, iaddr_q;
+logic [connector_pkg::XLEN-1:0] iretire_d, iretire_q;
 logic                           ilastsize_d, ilastsize_q;
 logic                           exception;
 logic                           interrupt;
@@ -63,7 +63,7 @@ always_comb begin
     update_iretire = '0;
 
     case (current_state)
-    mure_pkg::IDLE: begin
+    connector_pkg::IDLE: begin
         if (uop_entry_i.itype == 0 && uop_entry_i.valid) begin // standard instr and valid
             // sets iaddr, increases iretire
             iaddr_d = uop_entry_i.pc;
@@ -75,7 +75,7 @@ always_comb begin
             // saving iretire value
             update_iretire = '1;
             // goes to COUNT
-            next_state = mure_pkg::COUNT;
+            next_state = connector_pkg::COUNT;
         end else if (special_inst) begin // special inst as first inst
             // set all params for output
             iaddr_d = uop_entry_i.pc;
@@ -88,7 +88,7 @@ always_comb begin
             // read now the output
             one_cycle = '1;
             // remains here
-            next_state = mure_pkg::IDLE;
+            next_state = connector_pkg::IDLE;
         end else if (interrupt) begin
             itype_o = uop_entry_i.itype;
             cause_o = cause_i;
@@ -109,7 +109,7 @@ always_comb begin
             // read now the output
             one_cycle = '1;
             // remains here
-            next_state = mure_pkg::IDLE;
+            next_state = connector_pkg::IDLE;
         end else if (exception) begin
             itype_o = uop_entry_i.itype;
             cause_o = cause_i;
@@ -131,13 +131,13 @@ always_comb begin
             // read now the output
             one_cycle = '1;
             // remains here
-            next_state = mure_pkg::IDLE;
+            next_state = connector_pkg::IDLE;
         end else begin
-            next_state = mure_pkg::IDLE;
+            next_state = connector_pkg::IDLE;
         end
     end
 
-    mure_pkg::COUNT: begin
+    connector_pkg::COUNT: begin
         if (uop_entry_i.itype == 0 && uop_entry_i.valid) begin // standard inst
             // increases iretire
             iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
@@ -147,7 +147,7 @@ always_comb begin
             // saving iretire value
             update_iretire = '1;
             // remains here
-            next_state = mure_pkg::COUNT;
+            next_state = connector_pkg::COUNT;
         end else if (special_inst) begin
             // set all params for output
             iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
@@ -158,7 +158,7 @@ always_comb begin
             // output readable
             valid_o = '1;
             // goes to IDLE
-            next_state = mure_pkg::IDLE;
+            next_state = connector_pkg::IDLE;
         end else if (interrupt) begin
             itype_o = uop_entry_i.itype;
             cause_o = cause_i;
@@ -176,7 +176,7 @@ always_comb begin
             // output readable
             valid_o = '1;
             // remains here
-            next_state = mure_pkg::IDLE;
+            next_state = connector_pkg::IDLE;
         end else if (exception) begin
             itype_o = uop_entry_i.itype;
             cause_o = cause_i;
@@ -195,9 +195,9 @@ always_comb begin
             // output readable
             valid_o = '1;
             // remains here
-            next_state = mure_pkg::IDLE;
+            next_state = connector_pkg::IDLE;
         end else begin
-            next_state = mure_pkg::COUNT;
+            next_state = connector_pkg::COUNT;
         end
     end
 
@@ -207,7 +207,7 @@ end
 // sequential logic
 always_ff @(posedge clk_i, negedge rst_ni) begin
     if (!rst_ni) begin
-        current_state <= mure_pkg::IDLE;
+        current_state <= connector_pkg::IDLE;
         iaddr_q <= '0;
         iretire_q <= '0;
         ilastsize_q <= '0;
