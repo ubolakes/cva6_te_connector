@@ -1,4 +1,4 @@
 [submodule "common_cells"]
-	path = common_cells
+	path = src/common_cells
 	url = https://github.com/pulp-platform/common_cells
 	branch = aa85c7a
