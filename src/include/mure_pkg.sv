@@ -8,7 +8,7 @@ package mure_pkg;
     localparam INST_LEN = 32;
     localparam ITYPE_LEN = 3;
     localparam IRETIRE_LEN = 32;
-`ifdef TRDB_ARCH64 // 64bit arch specific parameters
+`ifdef TRENC_ARCH64 // 64bit arch specific parameters
     localparam XLEN = 64;
 `else // 32bit arch
     localparam XLEN = 32;
