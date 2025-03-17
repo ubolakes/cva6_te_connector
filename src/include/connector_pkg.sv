@@ -14,7 +14,6 @@
 // Github:  @ubolakes
 
 package connector_pkg;
-    localparam CAUSE_LEN = 5;
     localparam PRIV_LEN = 2; // depends on CPU implementation
     localparam INST_LEN = 32;
     localparam ITYPE_LEN = 3;
@@ -57,8 +56,8 @@ typedef struct packed {
 
 // struct to store exc and int infos
 typedef struct packed {
-    logic [CAUSE_LEN-1:0]   cause;
-    logic [XLEN-1:0]        tval;
+    logic [XLEN-1:0]    cause;
+    logic [XLEN-1:0]    tval;
 } exc_info_s;
 
 // states definition for FSM

@@ -23,14 +23,14 @@ module fsm (
     input logic                                     rst_ni,
 
     input connector_pkg::uop_entry_s                uop_entry_i,
-    input logic [connector_pkg::CAUSE_LEN-1:0]      cause_i,
+    input logic [connector_pkg::XLEN-1:0]           cause_i,
     input logic [connector_pkg::XLEN-1:0]           tval_i,
 
     output logic                                    valid_o,
     output logic [connector_pkg::IRETIRE_LEN-1:0]   iretire_o,
     output logic                                    ilastsize_o,
     output logic [connector_pkg::ITYPE_LEN-1:0]     itype_o,
-    output logic [connector_pkg::CAUSE_LEN-1:0]     cause_o,
+    output logic [connector_pkg::XLEN-1:0]          cause_o,
     output logic [connector_pkg::XLEN-1:0]          tval_o,
     output logic [connector_pkg::PRIV_LEN-1:0]      priv_o,
     output logic [connector_pkg::XLEN-1:0]          iaddr_o

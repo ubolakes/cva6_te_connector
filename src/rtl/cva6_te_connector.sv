@@ -50,7 +50,7 @@ module cva6_te_connector #(
     output logic [N-1:0][connector_pkg::IRETIRE_LEN-1:0]    iretire_o,
     output logic [N-1:0]                                    ilastsize_o,
     output logic [N-1:0][connector_pkg::ITYPE_LEN-1:0]      itype_o,
-    output logic [connector_pkg::CAUSE_LEN-1:0]             cause_o,
+    output logic [connector_pkg::XLEN-1:0]                  cause_o,
     output logic [connector_pkg::XLEN-1:0]                  tval_o,
     output logic [connector_pkg::PRIV_LEN-1:0]              priv_o,
     output logic [N-1:0][connector_pkg::XLEN-1:0]           iaddr_o
@@ -96,14 +96,14 @@ logic                                           valid_fsm;
 logic [N-1:0][connector_pkg::IRETIRE_LEN-1:0]   iretire_q;
 logic [N-1:0]                                   ilastsize_q;
 logic [N-1:0][connector_pkg::ITYPE_LEN-1:0]     itype_q;
-logic [connector_pkg::CAUSE_LEN-1:0]            cause_q;
+logic [connector_pkg::XLEN-1:0]                 cause_q;
 logic [connector_pkg::XLEN-1:0]                 tval_q;
 logic [N-1:0][connector_pkg::XLEN-1:0]          iaddr_q;
 
 logic [connector_pkg::IRETIRE_LEN-1:0]          iretire_d;
 logic                                           ilastsize_d;
 logic [connector_pkg::ITYPE_LEN-1:0]            itype_d;
-logic [connector_pkg::CAUSE_LEN-1:0]            cause_d;
+logic [connector_pkg::XLEN-1:0]                 cause_d;
 logic [connector_pkg::XLEN-1:0]                 tval_d;
 logic [connector_pkg::XLEN-1:0]                 iaddr_d;
 
