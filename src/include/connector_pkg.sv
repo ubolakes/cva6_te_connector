@@ -13,10 +13,13 @@
 // Contact: umberto.laghi@studio.unibo.it
 // Github:  @ubolakes
 
+// uncomment to enable 64bits arch support
+// `define TE_ARCH64
+
 package connector_pkg;
     localparam PRIV_LEN = 2; // depends on CPU implementation
     localparam INST_LEN = 32;
-    localparam ITYPE_LEN = 3;
+    localparam ITYPE_LEN = 4;
     localparam IRETIRE_LEN = 32;
 `ifdef TE_ARCH64 // 64bit arch specific parameters
     localparam XLEN = 64;
@@ -33,8 +36,8 @@ typedef enum logic[ITYPE_LEN-1:0] {
     ERET = 3, // exception or interrupt return
     NTB = 4, // nontaken branch
     TB = 5, // taken branch
-    UIJ = 6, // uninferable jump if ITYPE_LEN == 3, otherwise reserved
-    RES = 7 /*, // reserved
+    //RES = 6, // uninferable jump if ITYPE_LEN == 3, otherwise reserved
+    //RES = 7 , // reserved
     UC = 8, // uninferable call
     IC = 9, // inferable call
     UIJ = 10, // uninferable jump
@@ -42,7 +45,7 @@ typedef enum logic[ITYPE_LEN-1:0] {
     CRS = 12, // co-routine swap
     RET = 13, // return
     OUIJ = 14, // other uninferable jump
-    OIJ = 15*/ // other inferable jump
+    OIJ = 15 // other inferable jump
 } itype_e;
 
 // struct to store data inside the uop FIFO
@@ -68,7 +71,7 @@ typedef enum logic {
 
 // structs taken from cva6
 // for testing purpose, only necessary fields are kept
-  typedef enum logic [7:0] {  // basic ALU op
+typedef enum logic [7:0] {  // basic ALU op
     ADD,
     SUB,
     ADDW,
@@ -288,6 +291,15 @@ typedef enum logic {
     // Zicond instruction
     CZERO_EQZ,
     CZERO_NEZ
-  } fu_op;
+} fu_op;
+
+// determines the discontinuity type
+typedef enum logic [2:0] {
+    NoCF,    // No control flow prediction
+    Branch,  // Branch
+    Jump,    // Jump to address from immediate
+    JumpR,   // Jump to address from registers
+    Return   // Return Address Prediction
+} cf_t;
 
 endpackage
