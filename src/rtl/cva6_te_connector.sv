@@ -34,6 +34,7 @@ module cva6_te_connector #(
     // necessary inputs from bp_resolve_t
     input logic                                             branch_valid_i,
     input logic                                             is_taken_i,
+    input connector_pkg::cf_t                               cf_type_i,
     // necessary inputs from exception_t
     input logic                                             ex_valid_i,
     input logic [connector_pkg::XLEN-1:0]                   tval_i,
@@ -79,6 +80,7 @@ logic                                           clear_demux_arb;
 logic                                           enable_demux_arb;
 // itype_detector
 logic                                           is_taken_d, is_taken_q;
+connector_pkg::cf_t                             cf_type_d, cf_type_q;
 logic                                           interrupt;
 // block counter management
 logic                                           n_blocks_full;
@@ -118,6 +120,7 @@ assign clear_mux_arb =  (mux_arb_val == NRET-1 ||
                         !empty[0];
 assign enable_mux_arb = !empty[0]; // the counter goes on if FIFOs are not empty
 assign is_taken_d = is_taken_i;
+assign cf_type_d = cf_type_i;
 assign n_blocks_push = !n_blocks_full && n_blocks_i > 0;
 assign clear_demux_arb = n_blocks_pop; // demux_arb_val+1 == n_blocks_o && n_blocks_o > 0 && |valid_o;
 assign enable_demux_arb = valid_fsm; // && n_blocks_o > 1;
@@ -135,6 +138,7 @@ for (genvar i = 0; i < NRET; i++) begin
         .interrupt_i   (interrupt),
         .op_i          (op_i[i]),
         .branch_taken_i(is_taken_q),
+        .cf_type_i     (cf_type_q),
         .itype_o       (itype[i])
     );
 end
@@ -346,6 +350,7 @@ end
 always_ff @( posedge clk_i, negedge rst_ni ) begin
     if (!rst_ni) begin
         is_taken_q <= '0;
+        cf_type_q <= connector_pkg::NoCF;
         for (int i = 0; i < N; i++) begin
             iretire_q[i] <= '0;
             ilastsize_q[i] <= '0;
@@ -355,9 +360,10 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
             iaddr_q[i] <= '0;
         end
     end else begin
-        if (branch_valid_i) begin
-            is_taken_q <= is_taken_d;
-        end
+        //if (branch_valid_i) begin
+        is_taken_q <= is_taken_d && branch_valid_i;
+        cf_type_q <= cf_type_d;
+        //end
         if (valid_fsm) begin
             iretire_q[demux_arb_val] <= iretire_d;
             ilastsize_q[demux_arb_val] <= ilastsize_d;

@@ -44,14 +44,14 @@ logic                           ilastsize_d, ilastsize_q;
 logic                           exception;
 logic                           interrupt;
 logic                           special_inst;
+logic                           std_inst;
 logic                           one_cycle;
-logic                           update_iaddr;
-logic                           update_iretire;
 
 /* assignments */
 assign exception = uop_entry_i.itype == 1;
 assign interrupt = uop_entry_i.itype == 2;
 assign special_inst = uop_entry_i.itype > 2 && uop_entry_i.valid;
+assign std_inst = uop_entry_i.itype == 0 && uop_entry_i.valid;
 assign iretire_o = iretire_d;
 assign iaddr_o = one_cycle ? iaddr_d : iaddr_q;
 
@@ -70,26 +70,22 @@ always_comb begin
     priv_o = '0;
     iaddr_d = '0;
     one_cycle = '0;
-    update_iaddr = '0;
-    update_iretire = '0;
 
     case (current_state)
     connector_pkg::IDLE: begin
-        if (uop_entry_i.itype == 0 && uop_entry_i.valid) begin // standard instr and valid
+        if (std_inst) begin // standard instr and valid
             // sets iaddr, increases iretire
             iaddr_d = uop_entry_i.pc;
-            update_iaddr = '1;
             iretire_d = uop_entry_i.compressed ? 1 : 2;
             // saving ilastsize in case next cycle 
             // there is an exc or int w/out retired inst
             ilastsize_d = !uop_entry_i.compressed;
-            // saving iretire value
-            update_iretire = '1;
             // goes to COUNT
             next_state = connector_pkg::COUNT;
         end else if (special_inst) begin // special inst as first inst
             // set all params for output
             iaddr_d = uop_entry_i.pc;
+            iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
             ilastsize_o = !uop_entry_i.compressed;
             itype_o = uop_entry_i.itype;
             // cause and tval not necessary
@@ -149,14 +145,12 @@ always_comb begin
     end
 
     connector_pkg::COUNT: begin
-        if (uop_entry_i.itype == 0 && uop_entry_i.valid) begin // standard inst
+        if (std_inst) begin // standard inst
             // increases iretire
             iretire_d = uop_entry_i.compressed ? iretire_q + 1 : iretire_q + 2;
             // saving ilastsize in case next cycle 
             // there is an exc or int w/out retired inst
             ilastsize_d = !uop_entry_i.compressed;
-            // saving iretire value
-            update_iretire = '1;
             // remains here
             next_state = connector_pkg::COUNT;
         end else if (special_inst) begin
@@ -226,11 +220,11 @@ always_ff @(posedge clk_i, negedge rst_ni) begin
         if (valid_o) begin
             iretire_q <= '0;
         end
-        if (update_iaddr) begin
-            iaddr_q <= iaddr_d;
-        end
-        if (update_iretire) begin
+        if (std_inst) begin
             iretire_q <= iretire_d;
+            if (current_state == connector_pkg::IDLE) begin // if std inst and in IDLE state
+                iaddr_q <= iaddr_d;
+            end
         end
         if (uop_entry_i.valid) begin
            ilastsize_q <= ilastsize_d;

@@ -25,6 +25,7 @@ module itype_detector
     input logic                                 interrupt_i,
     input connector_pkg::fu_op                  op_i,
     input logic                                 branch_taken_i,
+    input connector_pkg::cf_t                   cf_type_i,
 
     output logic [connector_pkg::ITYPE_LEN-1:0] itype_o
 );
@@ -36,28 +37,33 @@ module itype_detector
     logic   nontaken_branch;
     logic   taken_branch;
     logic   updiscon;
+    logic   inferable_disc;
 
     // assignments
     assign exception = exception_i;
     assign interrupt = interrupt_i; // no need to have an inst committed
     assign eret = ( op_i == connector_pkg::MRET || 
                     op_i == connector_pkg::SRET ||
-                    op_i == connector_pkg::DRET );
+                    op_i == connector_pkg::DRET ) &&
+                    cf_type_i == connector_pkg::Return;
     assign nontaken_branch = (  op_i == connector_pkg::EQ ||
                                 op_i == connector_pkg::NE ||
                                 op_i == connector_pkg::LTS ||
                                 op_i == connector_pkg::GES ||
                                 op_i == connector_pkg::LTU ||
                                 op_i == connector_pkg::GEU) && 
-                                ~branch_taken_i;
+                                ~branch_taken_i && 
+                                cf_type_i == connector_pkg::Branch;
     assign taken_branch = ( op_i == connector_pkg::EQ ||
                             op_i == connector_pkg::NE ||
                             op_i == connector_pkg::LTS ||
                             op_i == connector_pkg::GES ||
                             op_i == connector_pkg::LTU ||
                             op_i == connector_pkg::GEU) &&
-                            branch_taken_i;
-    assign updiscon = op_i == connector_pkg::JALR;
+                            branch_taken_i &&
+                            cf_type_i == connector_pkg::Branch;
+    assign updiscon = op_i == connector_pkg::JALR && cf_type_i == connector_pkg::JumpR;
+    assign inferable_disc = cf_type_i == connector_pkg::Jump && branch_taken_i;
 
     // assigning the itype
     always_comb begin
@@ -76,6 +82,14 @@ module itype_detector
             itype_o = 5;
         end else if (connector_pkg::ITYPE_LEN == 3 && updiscon && valid_i) begin // uninferable discontinuity
             itype_o = 6;
+        // end else if () begin // uninferable call
+        //     itype_o = 8;
+        // end else if () begin // inferable call
+        //     itype_o = 9;
+        end else if (connector_pkg::ITYPE_LEN == 4 && updiscon && valid_i) begin // uninferable jump
+            itype_o = 10;
+        end else if (inferable_disc && valid_i) begin // inferable jump
+            itype_o = 11;
         end
     end
 
