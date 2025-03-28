@@ -35,6 +35,7 @@ module cva6_te_connector #(
     input logic                                             branch_valid_i,
     input logic                                             is_taken_i,
     input connector_pkg::cf_t                               cf_type_i,
+    input logic [connector_pkg::XLEN-1:0]                   disc_pc_i,
     // necessary inputs from exception_t
     input logic                                             ex_valid_i,
     input logic [connector_pkg::XLEN-1:0]                   tval_i,
@@ -81,6 +82,7 @@ logic                                           enable_demux_arb;
 // itype_detector
 logic                                           is_taken_d, is_taken_q;
 connector_pkg::cf_t                             cf_type_d, cf_type_q;
+logic [connector_pkg::XLEN-1:0]                 disc_pc_d, disc_pc_q;
 logic                                           interrupt;
 // block counter management
 logic                                           n_blocks_full;
@@ -121,6 +123,7 @@ assign clear_mux_arb =  (mux_arb_val == NRET-1 ||
 assign enable_mux_arb = !empty[0]; // the counter goes on if FIFOs are not empty
 assign is_taken_d = is_taken_i;
 assign cf_type_d = cf_type_i;
+assign disc_pc_d = disc_pc_i;
 assign n_blocks_push = !n_blocks_full && n_blocks_i > 0;
 assign clear_demux_arb = n_blocks_pop; // demux_arb_val+1 == n_blocks_o && n_blocks_o > 0 && |valid_o;
 assign enable_demux_arb = valid_fsm; // && n_blocks_o > 1;
@@ -139,6 +142,8 @@ for (genvar i = 0; i < NRET; i++) begin
         .op_i          (op_i[i]),
         .branch_taken_i(is_taken_q),
         .cf_type_i     (cf_type_q),
+        .pc_i          (pc_i[i]),
+        .disc_pc_i     (disc_pc_q),
         .itype_o       (itype[i])
     );
 end
@@ -325,7 +330,7 @@ always_comb begin
     // second case: waiting for N blocks
     // when more blocks are output they 
     // are not exc or int, but other disc
-    if (n_blocks_o > 1 && demux_arb_val == n_blocks_o-1 && valid_fsm && n_blocks_empty) begin
+    if (n_blocks_o > 1 && demux_arb_val == n_blocks_o-1 && valid_fsm && !n_blocks_empty) begin
         // leaving to 0 cause and tval since they are not necessary
         // setting block specific data
         for (int i = 0; i < n_blocks_o; i++) begin
@@ -351,6 +356,7 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
     if (!rst_ni) begin
         is_taken_q <= '0;
         cf_type_q <= connector_pkg::NoCF;
+        disc_pc_q <='0;
         for (int i = 0; i < N; i++) begin
             iretire_q[i] <= '0;
             ilastsize_q[i] <= '0;
@@ -363,6 +369,7 @@ always_ff @( posedge clk_i, negedge rst_ni ) begin
         //if (branch_valid_i) begin
         is_taken_q <= is_taken_d && branch_valid_i;
         cf_type_q <= cf_type_d;
+        disc_pc_q <= disc_pc_d;
         //end
         if (valid_fsm) begin
             iretire_q[demux_arb_val] <= iretire_d;

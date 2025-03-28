@@ -25,6 +25,8 @@ module itype_detector
     input logic                                 interrupt_i,
     input connector_pkg::fu_op                  op_i,
     input logic                                 branch_taken_i,
+    input logic [connector_pkg::XLEN-1:0]       pc_i,
+    input logic [connector_pkg::XLEN-1:0]       disc_pc_i,
     input connector_pkg::cf_t                   cf_type_i,
 
     output logic [connector_pkg::ITYPE_LEN-1:0] itype_o
@@ -45,7 +47,8 @@ module itype_detector
     assign eret = ( op_i == connector_pkg::MRET || 
                     op_i == connector_pkg::SRET ||
                     op_i == connector_pkg::DRET ) &&
-                    cf_type_i == connector_pkg::Return;
+                    cf_type_i == connector_pkg::Return &&
+                    pc_i == disc_pc_i;
     assign nontaken_branch = (  op_i == connector_pkg::EQ ||
                                 op_i == connector_pkg::NE ||
                                 op_i == connector_pkg::LTS ||
@@ -53,7 +56,8 @@ module itype_detector
                                 op_i == connector_pkg::LTU ||
                                 op_i == connector_pkg::GEU) && 
                                 ~branch_taken_i && 
-                                cf_type_i == connector_pkg::Branch;
+                                cf_type_i == connector_pkg::Branch &&
+                                pc_i == disc_pc_i;
     assign taken_branch = ( op_i == connector_pkg::EQ ||
                             op_i == connector_pkg::NE ||
                             op_i == connector_pkg::LTS ||
@@ -61,9 +65,12 @@ module itype_detector
                             op_i == connector_pkg::LTU ||
                             op_i == connector_pkg::GEU) &&
                             branch_taken_i &&
-                            cf_type_i == connector_pkg::Branch;
-    assign updiscon = op_i == connector_pkg::JALR && cf_type_i == connector_pkg::JumpR;
-    assign inferable_disc = cf_type_i == connector_pkg::Jump && branch_taken_i;
+                            cf_type_i == connector_pkg::Branch &&
+                            pc_i == disc_pc_i;
+    assign updiscon = op_i == connector_pkg::JALR || cf_type_i == connector_pkg::JumpR;
+    assign inferable_disc = cf_type_i == connector_pkg::Jump && 
+                            branch_taken_i &&
+                            pc_i == disc_pc_i;
 
     // assigning the itype
     always_comb begin
