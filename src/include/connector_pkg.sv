@@ -14,7 +14,7 @@
 // Github:  @ubolakes
 
 // uncomment to enable 64bits arch support
-// `define TE_ARCH64
+`define TE_ARCH64
 
 package connector_pkg;
     localparam PRIV_LEN = 2; // depends on CPU implementation
