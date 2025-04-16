@@ -24,7 +24,9 @@ module itype_detector
     input logic                                 exception_i,
     input logic                                 interrupt_i,
     input connector_pkg::fu_op                  op_i,
+    input logic                                 pending_branch_i,
     input logic                                 branch_taken_i,
+    input logic                                 branch_fifo_empty_i,
     input logic [connector_pkg::XLEN-1:0]       pc_i,
     input logic [connector_pkg::XLEN-1:0]       disc_pc_i,
     input connector_pkg::cf_t                   cf_type_i,
@@ -56,7 +58,8 @@ module itype_detector
                                 op_i == connector_pkg::LTU ||
                                 op_i == connector_pkg::GEU) && 
                                 ~branch_taken_i && 
-                                cf_type_i == connector_pkg::Branch &&
+                                pending_branch_i &&
+                                !branch_fifo_empty_i &&
                                 pc_i == disc_pc_i;
     assign taken_branch = ( op_i == connector_pkg::EQ ||
                             op_i == connector_pkg::NE ||
@@ -65,11 +68,15 @@ module itype_detector
                             op_i == connector_pkg::LTU ||
                             op_i == connector_pkg::GEU) &&
                             branch_taken_i &&
-                            cf_type_i == connector_pkg::Branch &&
+                            pending_branch_i &&
+                            !branch_fifo_empty_i &&
                             pc_i == disc_pc_i;
-    assign updiscon = op_i == connector_pkg::JALR || cf_type_i == connector_pkg::JumpR;
+    assign updiscon =   (op_i == connector_pkg::JALR || cf_type_i == connector_pkg::JumpR) &&
+                        !branch_fifo_empty_i && pc_i == disc_pc_i;
     assign inferable_disc = cf_type_i == connector_pkg::Jump && 
                             branch_taken_i &&
+                            pending_branch_i &&
+                            !branch_fifo_empty_i &&
                             pc_i == disc_pc_i;
 
     // assigning the itype

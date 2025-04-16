@@ -302,4 +302,12 @@ typedef enum logic [2:0] {
     Return   // Return Address Prediction
 } cf_t;
 
+// stores a branch waiting to be processed
+typedef struct packed {
+    logic               branch_valid;
+    logic               branch_taken;
+    logic [XLEN-1:0]    disc_pc;
+    cf_t                cf_type;
+} pending_branch_s;
+
 endpackage

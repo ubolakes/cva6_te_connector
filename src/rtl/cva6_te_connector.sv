@@ -66,6 +66,9 @@ module cva6_te_connector #(
 connector_pkg::uop_entry_s                      uop_entry_i[NRET-1:0], uop_entry_o[NRET-1:0];
 connector_pkg::uop_entry_s                      uop_entry_mux;
 logic [connector_pkg::ITYPE_LEN-1:0]            itype[NRET];
+logic                                           pending_branch_empty;
+connector_pkg::pending_branch_s                 pending_branch_i, pending_branch_o;
+logic                                           pending_branch_pop;
 // FIFOs management
 logic                                           pop; // signal to pop FIFOs
 logic                                           empty[NRET-1:0]; // signal used to enable counter
@@ -132,23 +135,47 @@ assign exc_info_i.tval = tval_i;
 assign exc_info_i.cause = cause_i;
 assign uop_entry_mux = empty[0] ? '0 : uop_entry_o[mux_arb_val];
 assign interrupt = cause_i[connector_pkg::XLEN-1]; // determinated based on the MSB of cause
+assign pending_branch_i.branch_valid = branch_valid_i;
+assign pending_branch_i.branch_taken = is_taken_i;
+assign pending_branch_i.disc_pc = disc_pc_i;
+assign pending_branch_i.cf_type = cf_type_i;
 
 /* itype_detectors */
 for (genvar i = 0; i < NRET; i++) begin
     itype_detector i_itype_detector (
-        .valid_i       (valid_i[i]),
-        .exception_i   (ex_valid_i),
-        .interrupt_i   (interrupt),
-        .op_i          (op_i[i]),
-        .branch_taken_i(is_taken_q),
-        .cf_type_i     (cf_type_q),
-        .pc_i          (pc_i[i]),
-        .disc_pc_i     (disc_pc_q),
-        .itype_o       (itype[i])
+        .valid_i            (valid_i[i]),
+        .exception_i        (ex_valid_i),
+        .interrupt_i        (interrupt),
+        .op_i               (op_i[i]),
+        .pending_branch_i   (pending_branch_o.branch_valid),
+        .branch_taken_i     (pending_branch_o.branch_taken),
+        .branch_fifo_empty_i(pending_branch_empty),
+        .cf_type_i          (pending_branch_o.cf_type),
+        .pc_i               (pc_i[i]),
+        .disc_pc_i          (pending_branch_o.disc_pc),
+        .itype_o            (itype[i])
     );
 end
 
 /* FIFOs */
+// FIFO to store pending branches
+fifo_v3 #(
+    .DEPTH(FIFO_DEPTH),
+    .dtype(connector_pkg::pending_branch_s)
+) i_fifo_branches (
+    .clk_i     (clk_i),
+    .rst_ni    (rst_ni),
+    .flush_i   ('0),
+    .testmode_i('0),
+    .full_o    (),
+    .empty_o   (pending_branch_empty),
+    .usage_o   (),
+    .data_i    (pending_branch_i),
+    .push_i    (branch_valid_i),
+    .data_o    (pending_branch_o),
+    .pop_i     (pending_branch_pop)
+);
+
 /* commit ports FIFOs */
 for (genvar i = 0; i < NRET; i++) begin
     fifo_v3 #(
@@ -258,6 +285,8 @@ always_comb begin
     // init
     n_blocks_i = '0;
     n_blocks_pop = '0;
+    pending_branch_pop = '0;
+
     for (int i = 0; i < N; i++) begin
         // output
         valid_o[i] = '0;
@@ -284,6 +313,13 @@ always_comb begin
         uop_entry_i[i].compressed = is_compressed_i[i];
         uop_entry_i[i].priv = priv_lvl_i;
     end
+
+    // popping pending branch fifo
+    for (int i = 0; i < NRET; i++) begin
+        if (itype[i] >= 4) begin
+            pending_branch_pop = '1;
+        end
+    end 
 
     // enabling push in input FIFOs
     for (int i = 0; i < NRET; i++) begin
