@@ -1,7 +1,7 @@
 # Package metadata. Required.
 package:
   # The name of the package. Required.
-  name: trace_encoder
+  name: cva6_te_connector
 
   # The list of package authors and contributors. Optional.
   # By convention, authors should be listed in the form shown below.
